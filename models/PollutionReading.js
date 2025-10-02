@@ -11,72 +11,48 @@ module.exports = (sequelize) => {
       type: DataTypes.STRING,
       allowNull: false
     },
-    country: {
-      type: DataTypes.STRING,
-      allowNull: false,
-      defaultValue: 'India'
-    },
-    lat: {
-      type: DataTypes.DECIMAL(10, 8),
-      allowNull: false
-    },
-    lng: {
-      type: DataTypes.DECIMAL(11, 8),
-      allowNull: false
-    },
     aqi: {
       type: DataTypes.INTEGER,
-      allowNull: false,
-      validate: {
-        min: 0,
-        max: 500
-      }
+      allowNull: false
     },
     pm25: {
-      type: DataTypes.DECIMAL(10, 2),
-      allowNull: false,
-      validate: {
-        min: 0
-      }
+      type: DataTypes.FLOAT,
+      allowNull: true
     },
     pm10: {
-      type: DataTypes.DECIMAL(10, 2),
-      allowNull: false,
-      validate: {
-        min: 0
-      }
+      type: DataTypes.FLOAT,
+      allowNull: true
     },
     no2: {
-      type: DataTypes.DECIMAL(10, 2),
-      allowNull: false,
-      validate: {
-        min: 0
-      }
-    },
-    o3: {
-      type: DataTypes.DECIMAL(10, 2),
-      allowNull: false,
-      validate: {
-        min: 0
-      }
+      type: DataTypes.FLOAT,
+      allowNull: true
     },
     so2: {
-      type: DataTypes.DECIMAL(10, 2),
-      allowNull: false,
-      validate: {
-        min: 0
-      }
+      type: DataTypes.FLOAT,
+      allowNull: true
+    },
+    o3: {
+      type: DataTypes.FLOAT,
+      allowNull: true
     },
     co: {
-      type: DataTypes.DECIMAL(10, 2),
-      allowNull: false,
-      validate: {
-        min: 0
-      }
+      type: DataTypes.FLOAT,
+      allowNull: true
     },
-    recordedAt: {
+    temperature: {
+      type: DataTypes.FLOAT,
+      allowNull: true
+    },
+    humidity: {
+      type: DataTypes.FLOAT,
+      allowNull: true
+    },
+    windSpeed: {
+      type: DataTypes.FLOAT,
+      allowNull: true
+    },
+    timestamp: {
       type: DataTypes.DATE,
-      allowNull: false,
       defaultValue: DataTypes.NOW
     },
     userId: {
@@ -89,22 +65,13 @@ module.exports = (sequelize) => {
     }
   }, {
     tableName: 'pollution_readings',
-    indexes: [
-      {
-        unique: true,
-        fields: ['city', 'recordedAt']
-      },
-      {
-        fields: ['city']
-      },
-      {
-        fields: ['recordedAt']
-      }
-    ]
+    timestamps: true
   });
 
   PollutionReading.associate = (models) => {
-    PollutionReading.belongsTo(models.User, { foreignKey: 'userId', as: 'user' });
+    if (models.User) {
+      PollutionReading.belongsTo(models.User, { foreignKey: 'userId', as: 'user' });
+    }
   };
 
   return PollutionReading;
