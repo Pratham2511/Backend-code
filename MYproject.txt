@@ -1,0 +1,2691 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Airlytics - Indian Cities Air Pollution Tracker</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    
+    <!-- Animate.css -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
+    
+    <!-- Custom CSS -->
+    <style>
+        :root {
+            --primary-color: #0d6efd;
+            --secondary-color: #6c757d;
+            --success-color: #198754;
+            --info-color: #0dcaf0;
+            --warning-color: #ffc107;
+            --danger-color: #dc3545;
+            --light-color: #f8f9fa;
+            --dark-color: #212529;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f8f9fa;
+            color: #333;
+        }
+
+        .navbar-brand .brand-name {
+            font-weight: 700;
+            font-size: 1.5rem;
+            letter-spacing: -0.5px;
+        }
+
+        .hero-section {
+            background: linear-gradient(135deg, #0d6efd 0%, #6610f2 100%);
+            color: white;
+            padding: 5rem 0;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero-section::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiPjxkZWZzPjxwYXR0ZXJuIGlkPSJwYXR0ZXJuIiB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHBhdHRlcm5Vbml0cz0idXNlclNwYWNlT25Vc2UiIHBhdHRlcm5UcmFuc2Zvcm09InJvdGF0ZSg0NSkiPjxyZWN0IHg9IjAiIHk9IjAiIHdpZHRoPSIyMCIgaGVpZ2h0PSIyMCIgZmlsbD0icmdiYSgyNTUsIDI1NSwgMjU1LCAwLjA1KSIvPjwvcGF0dGVybj48L2RlZnM+PHJlY3Qgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgZmlsbD0idXJsKCNwYXR0ZXJuKSIvPjwvc3ZnPg==');
+            opacity: 0.2;
+        }
+
+        .hero-section > .container {
+            position: relative;
+            z-index: 1;
+        }
+
+        .stat-box {
+            background-color: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(5px);
+            border-radius: 10px;
+            padding: 1.5rem;
+            transition: transform 0.3s;
+        }
+
+        .stat-box:hover {
+            transform: translateY(-5px);
+        }
+
+        .stat-box i {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-box h3 {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 0;
+        }
+
+        .action-card {
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: none;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        .action-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .action-icon {
+            width: 60px;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .city-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .city-card {
+            transition: all 0.3s ease;
+        }
+
+        .city-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .aqi-badge {
+            font-size: 1.5rem;
+            font-weight: 700;
+            padding: 0.5rem;
+            border-radius: 50%;
+            width: 80px;
+            height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .aqi-good {
+            background-color: #198754;
+        }
+
+        .aqi-moderate {
+            background-color: #ffc107;
+        }
+
+        .aqi-unhealthy-sensitive {
+            background-color: #fd7e14;
+        }
+
+        .aqi-unhealthy {
+            background-color: #dc3545;
+        }
+
+        .aqi-very-unhealthy {
+            background-color: #6f42c1;
+        }
+
+        .aqi-hazardous {
+            background-color: #721c24;
+        }
+
+        #map {
+            min-height: 500px;
+            width: 100%;
+            position: relative;
+            z-index: 1;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .map-controls {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            z-index: 1000;
+            width: 300px;
+        }
+
+        .loading-spinner {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 1000;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 300px;
+            width: 100%;
+        }
+
+        .mini-chart-container {
+            position: relative;
+            height: 200px;
+            width: 100%;
+        }
+
+        .health-card {
+            border-radius: 10px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .health-good {
+            background-color: rgba(25, 135, 84, 0.1);
+            border-left: 4px solid #198754;
+        }
+
+        .health-moderate {
+            background-color: rgba(255, 193, 7, 0.1);
+            border-left: 4px solid #ffc107;
+        }
+
+        .health-unhealthy-sensitive {
+            background-color: rgba(253, 126, 20, 0.1);
+            border-left: 4px solid #fd7e14;
+        }
+
+        .health-unhealthy {
+            background-color: rgba(220, 53, 69, 0.1);
+            border-left: 4px solid #dc3545;
+        }
+
+        .health-very-unhealthy {
+            background-color: rgba(111, 66, 193, 0.1);
+            border-left: 4px solid #6f42c1;
+        }
+
+        .health-hazardous {
+            background-color: rgba(114, 28, 36, 0.1);
+            border-left: 4px solid #721c24;
+        }
+
+        .highlight-box {
+            border-radius: 10px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            color: white;
+        }
+
+        .most-polluted {
+            background: linear-gradient(135deg, #dc3545 0%, #721c24 100%);
+        }
+
+        .least-polluted {
+            background: linear-gradient(135deg, #198754 0%, #0f5132 100%);
+        }
+
+        .weather-card {
+            display: flex;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .weather-icon {
+            font-size: 2rem;
+            margin-right: 1rem;
+        }
+
+        .timeline-slider {
+            margin: 2rem 0;
+        }
+
+        .alert-card {
+            border-radius: 10px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .alert-warning {
+            background-color: rgba(255, 193, 7, 0.1);
+            border-left: 4px solid #ffc107;
+        }
+
+        .refresh-indicator {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 1050;
+            display: none;
+        }
+
+        .last-updated {
+            text-align: center;
+            color: #6c757d;
+            font-size: 0.9rem;
+            margin-top: 1rem;
+        }
+
+        .dark-mode {
+            background-color: #121212;
+            color: #e0e0e0;
+        }
+
+        .dark-mode .card {
+            background-color: #1e1e1e;
+            border-color: #333;
+        }
+
+        .dark-mode .navbar {
+            background-color: #1e1e1e !important;
+        }
+
+        .dark-mode .hero-section {
+            background: linear-gradient(135deg, #1a237e 0%, #4a148c 100%);
+        }
+
+        .dark-mode .action-card {
+            background-color: #2a2a2a;
+        }
+
+        .dark-mode .nav-tabs .nav-link {
+            color: #e0e0e0;
+        }
+
+        .dark-mode .nav-tabs .nav-link.active {
+            background-color: #2a2a2a;
+            border-color: #333 #333 #2a2a2a;
+        }
+
+        .dark-mode .accordion-button:not(.collapsed) {
+            background-color: #2a2a2a;
+            color: #e0e0e0;
+        }
+
+        .dark-mode .accordion-body {
+            background-color: #2a2a2a;
+        }
+
+        /* Map fixes */
+        .tab-pane {
+            position: relative;
+        }
+
+        .tab-pane:not(.active) {
+            display: block !important;
+            height: 0;
+            overflow: hidden;
+            visibility: hidden;
+        }
+
+        .tab-pane.active {
+            height: auto;
+            overflow: visible;
+            visibility: visible;
+        }
+
+        @media (max-width: 768px) {
+            .hero-section {
+                padding: 3rem 0;
+            }
+            
+            .stat-box {
+                margin-bottom: 1rem;
+            }
+            
+            .map-controls {
+                width: 250px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Skip to content link for accessibility -->
+    <a href="#mainTabs" class="visually-hidden-focusable">Skip to main content</a>
+
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top">
+        <div class="container">
+            <a class="navbar-brand d-flex align-items-center" href="#">
+                <i class="bi bi-wind me-2"></i> 
+                <div>
+                    <div class="brand-name">AIRLYTICS</div>
+                    <small class="text-muted d-block fs-6">Pollution Tracker</small>
+                </div>
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto align-items-center">
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" data-bs-toggle="modal" data-bs-target="#aboutModal">
+                            <i class="bi bi-info-circle me-1"></i> About
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <button class="btn btn-outline-light ms-2" data-bs-toggle="modal" data-bs-target="#loginModal">
+                            <i class="bi bi-person-circle me-1"></i> Login
+                        </button>
+                    </li>
+                    <li class="nav-item">
+                        <button class="btn btn-primary ms-2" data-bs-toggle="modal" data-bs-target="#registerModal">
+                            <i class="bi bi-person-plus me-1"></i> Register
+                        </button>
+                    </li>
+                    <li class="nav-item">
+                        <button id="darkModeToggle" class="btn btn-outline-light ms-2" aria-label="Toggle dark mode">
+                            <i class="bi bi-moon-stars"></i>
+                        </button>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero-section text-center">
+        <div class="container">
+            <div class="animate__animated animate__fadeIn">
+                <h1 class="brand-name">AIRLYTICS</h1>
+                <h1 class="display-4 fw-bold mb-4">Indian Cities Air Pollution Tracker</h1>
+                <p class="lead mb-4">Real-time air quality monitoring and analysis for major Indian cities</p>
+                <div class="d-flex justify-content-center gap-3">
+                    <button class="btn btn-light btn-lg" data-bs-toggle="modal" data-bs-target="#registerModal">
+                        <i class="bi bi-rocket-takeoff me-2"></i>Get Started
+                    </button>
+                    <button class="btn btn-outline-light btn-lg" onclick="document.getElementById('tracker-tab').click()">
+                        <i class="bi bi-geo-alt me-2"></i>View Cities
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Stats Section -->
+            <div class="row mt-5 pt-4">
+                <div class="col-md-3 col-6 mb-3">
+                    <div class="stat-box animate__animated animate__fadeInUp animate__delay-1s">
+                        <i class="bi bi-geo-alt-fill text-primary"></i>
+                        <h3>10+</h3>
+                        <p>Major Cities</p>
+                    </div>
+                </div>
+                <div class="col-md-3 col-6 mb-3">
+                    <div class="stat-box animate__animated animate__fadeInUp animate__delay-2s">
+                        <i class="bi bi-graph-up text-success"></i>
+                        <h3>24/7</h3>
+                        <p>Real-time Data</p>
+                    </div>
+                </div>
+                <div class="col-md-3 col-6 mb-3">
+                    <div class="stat-box animate__animated animate__fadeInUp animate__delay-3s">
+                        <i class="bi bi-bell text-warning"></i>
+                        <h3>AQI</h3>
+                        <p>Alerts</p>
+                    </div>
+                </div>
+                <div class="col-md-3 col-6 mb-3">
+                    <div class="stat-box animate__animated animate__fadeInUp animate__delay-4s">
+                        <i class="bi bi-file-earmark-text text-info"></i>
+                        <h3>PDF</h3>
+                        <p>Reports</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Quick Actions Section -->
+    <section class="py-4 bg-light">
+        <div class="container">
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <div class="card action-card h-100" onclick="document.getElementById('tracker-tab').click()">
+                        <div class="card-body d-flex align-items-center">
+                            <div class="action-icon bg-primary bg-opacity-10 text-primary rounded-circle p-3 me-3">
+                                <i class="bi bi-geo-alt fs-4"></i>
+                            </div>
+                            <div>
+                                <h5 class="card-title mb-1">Track Pollution</h5>
+                                <p class="card-text small text-muted mb-0">Monitor air quality in your city</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card action-card h-100" onclick="document.getElementById('map-tab').click()">
+                        <div class="card-body d-flex align-items-center">
+                            <div class="action-icon bg-success bg-opacity-10 text-success rounded-circle p-3 me-3">
+                                <i class="bi bi-map fs-4"></i>
+                            </div>
+                            <div>
+                                <h5 class="card-title mb-1">Map View</h5>
+                                <p class="card-text small text-muted mb-0">Visualize pollution on map</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card action-card h-100" onclick="document.getElementById('analysis-tab').click()">
+                        <div class="card-body d-flex align-items-center">
+                            <div class="action-icon bg-warning bg-opacity-10 text-warning rounded-circle p-3 me-3">
+                                <i class="bi bi-graph-up fs-4"></i>
+                            </div>
+                            <div>
+                                <h5 class="card-title mb-1">Analysis</h5>
+                                <p class="card-text small text-muted mb-0">Detailed insights and trends</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Main Content with Tabs -->
+    <section class="py-5">
+        <div class="container">
+            <!-- Tab Navigation -->
+            <ul class="nav nav-tabs justify-content-center mb-4" id="mainTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="tracker-tab" data-bs-toggle="tab" data-bs-target="#tracker" type="button" role="tab" aria-controls="tracker" aria-selected="true">
+                        <i class="bi bi-geo-alt me-2"></i>Pollution Tracker
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="map-tab" data-bs-toggle="tab" data-bs-target="#mapTab" type="button" role="tab" aria-controls="mapTab" aria-selected="false">
+                        <i class="bi bi-map me-2"></i>Map View
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="analysis-tab" data-bs-toggle="tab" data-bs-target="#analysis" type="button" role="tab" aria-controls="analysis" aria-selected="false">
+                        <i class="bi bi-graph-up me-2"></i>Analysis
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="health-tab" data-bs-toggle="tab" data-bs-target="#health" type="button" role="tab" aria-controls="health" aria-selected="false">
+                        <i class="bi bi-heart-pulse me-2"></i>Health Tips
+                    </button>
+                </li>
+            </ul>
+
+            <!-- Tab Content -->
+            <div class="tab-content" id="mainTabsContent">
+                <!-- Tracker Tab -->
+                <div class="tab-pane fade show active" id="tracker" role="tabpanel" aria-labelledby="tracker-tab">
+                    <div class="row justify-content-center mb-4">
+                        <div class="col-md-8 text-center">
+                            <p class="text-muted">Your tracked cities</p>
+                            <div class="btn-group mb-3" role="group">
+                                <button type="button" class="btn btn-outline-primary" onclick="addRandomCity()">
+                                    <i class="bi bi-plus-circle me-1"></i> Add Random City
+                                </button>
+                                <button type="button" class="btn btn-outline-primary" onclick="refreshAllCitiesData()">
+                                    <i class="bi bi-arrow-clockwise me-1"></i> Refresh Data
+                                </button>
+                                <button type="button" class="btn btn-outline-danger" onclick="clearAllCities()">
+                                    <i class="bi bi-trash me-1"></i> Clear All
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Cities Container with Enhanced Scroll -->
+                    <div class="cities-container" id="citiesContainer">
+                        <div class="city-grid" id="pollutionCards">
+                            <!-- Cards will be populated by JavaScript -->
+                        </div>
+                    </div>
+                    
+                    <div class="last-updated" id="lastUpdated">
+                        Last updated: <span id="updateTime">--:--:--</span>
+                    </div>
+                </div>
+
+                <!-- Map Tab -->
+                <div class="tab-pane fade" id="mapTab" role="tabpanel" aria-labelledby="map-tab">
+                    <div class="position-relative">
+                        <div id="map"></div>
+                        <div class="map-controls">
+                            <div class="card">
+                                <div class="card-body">
+                                    <h6 class="card-title">Search Location</h6>
+                                    <div class="input-group">
+                                        <input type="text" id="mapLocationInput" class="form-control" placeholder="Enter city name..." aria-label="Search for a city">
+                                        <button class="btn btn-primary" onclick="searchMapLocation()">Search</button>
+                                    </div>
+                                    <div class="mt-3">
+                                        <small class="text-muted">Click anywhere on the map to add a city to your tracker</small>
+                                    </div>
+                                    <hr>
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" id="heatmapToggle" checked>
+                                        <label class="form-check-label" for="heatmapToggle">
+                                            Show Pollution Heatmap
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="loading-spinner" id="mapLoading">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Analysis Tab -->
+                <div class="tab-pane fade" id="analysis" role="tabpanel" aria-labelledby="analysis-tab">
+                    <div id="cityAnalysisHeader" class="city-analysis-header">
+                        <h3 id="analysisCityName">City Analysis</h3>
+                        <button class="back-to-all-btn" onclick="showAllCitiesAnalysis()">← Back to All Cities</button>
+                    </div>
+                    
+                    <!-- Health Impact Indicators -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <h4 class="mb-3">Health Impact Indicators</h4>
+                            <div id="healthImpactCard" class="health-card health-moderate">
+                                <h5 id="healthTitle">Today's air is Moderate - Sensitive people should consider reducing prolonged outdoor exertion.</h5>
+                                <p id="healthDescription">Air quality is acceptable for most people. However, there may be a risk for some people, particularly those who are unusually sensitive to air pollution.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Forecast / Prediction -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <h4 class="mb-3">3-Day Weather Forecast</h4>
+                            <div class="card">
+                                <div class="card-body">
+                                    <div class="row" id="forecastContainer">
+                                        <!-- Forecast cards will be populated by JavaScript -->
+                                    </div>
+                                    <div id="forecastChartContainer" class="chart-container mt-3">
+                                        <canvas id="forecastChart"></canvas>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Detailed Pollutant Insights -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <h4 class="mb-3">Detailed Pollutant Insights</h4>
+                            <div id="pollutantInsightsContainer">
+                                <div id="singleCityPollutants" style="display: none;">
+                                    <div class="card">
+                                        <div class="card-body">
+                                            <h5>Pollutant Concentration</h5>
+                                            <div class="chart-container">
+                                                <canvas id="cityPollutantChart"></canvas>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div id="allCitiesPollutants">
+                                    <div class="row">
+                                        <div class="col-md-6 mb-3">
+                                            <div class="card">
+                                                <div class="card-body">
+                                                    <h6>PM2.5 Trends</h6>
+                                                    <div class="mini-chart-container">
+                                                        <canvas id="pm25Chart"></canvas>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <div class="card">
+                                                <div class="card-body">
+                                                    <h6>PM10 Trends</h6>
+                                                    <div class="mini-chart-container">
+                                                        <canvas id="pm10Chart"></canvas>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <div class="card">
+                                                <div class="card-body">
+                                                    <h6>NO₂ Trends</h6>
+                                                    <div class="mini-chart-container">
+                                                        <canvas id="no2Chart"></canvas>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <div class="card">
+                                                <div class="card-body">
+                                                    <h6>O₃ Trends</h6>
+                                                    <div class="mini-chart-container">
+                                                        <canvas id="o3Chart"></canvas>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- City Comparison Enhancements -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <h4 class="mb-3">City Comparison</h4>
+                            <div class="card mb-3">
+                                <div class="card-body">
+                                    <div class="row mb-3">
+                                        <div class="col-md-5">
+                                            <select id="city1Select" class="form-select" aria-label="Select first city">
+                                                <option value="">Select first city</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-5">
+                                            <select id="city2Select" class="form-select" aria-label="Select second city">
+                                                <option value="">Select second city</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <button class="btn btn-primary w-100" onclick="compareCities()">Compare</button>
+                                        </div>
+                                    </div>
+                                    <div class="chart-container">
+                                        <canvas id="cityComparisonChart"></canvas>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div id="mostPollutedCard" class="highlight-box most-polluted">
+                                        <h5>Most Polluted City Today</h5>
+                                        <h3 id="mostPollutedCity">--</h3>
+                                        <p>AQI: <span id="mostPollutedAQI">--</span></p>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div id="leastPollutedCard" class="highlight-box least-polluted">
+                                        <h5>Least Polluted City Today</h5>
+                                        <h3 id="leastPollutedCity">--</h3>
+                                        <p>AQI: <span id="leastPollutedAQI">--</span></p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Extra Environmental Data -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <h4 class="mb-3">Environmental Data</h4>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <div class="card">
+                                        <div class="card-body">
+                                            <h5 class="card-title">Current Weather Conditions</h5>
+                                            <div class="weather-card">
+                                                <i class="bi bi-thermometer-half weather-icon text-danger"></i>
+                                                <div>
+                                                    <h6>Temperature</h6>
+                                                    <p id="temperature">--°C</p>
+                                                </div>
+                                            </div>
+                                            <div class="weather-card">
+                                                <i class="bi bi-droplet weather-icon text-primary"></i>
+                                                <div>
+                                                    <h6>Humidity</h6>
+                                                    <p id="humidity">--%</p>
+                                                </div>
+                                            </div>
+                                            <div class="weather-card">
+                                                <i class="bi bi-wind weather-icon text-success"></i>
+                                                <div>
+                                                    <h6>Wind Speed</h6>
+                                                    <p id="windSpeed">-- km/h</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <div class="card">
+                                        <div class="card-body">
+                                            <h5 class="card-title">Pollution-Weather Correlation</h5>
+                                            <div class="chart-container">
+                                                <canvas id="correlationChart"></canvas>
+                                            </div>
+                                            <p class="mt-2"><strong>Insight:</strong> Higher humidity increases PM2.5 levels.</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- User-Friendly Additions -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <h4 class="mb-3">Additional Features</h4>
+                            <div class="card mb-3">
+                                <div class="card-body">
+                                    <h5 class="card-title">Historical Timeline</h5>
+                                    <input type="range" class="form-range timeline-slider" id="timelineSlider" min="1" max="12" value="6">
+                                    <div class="d-flex justify-content-between">
+                                        <span>Jan</span>
+                                        <span>Feb</span>
+                                        <span>Mar</span>
+                                        <span>Apr</span>
+                                        <span>May</span>
+                                        <span>Jun</span>
+                                        <span>Jul</span>
+                                        <span>Aug</span>
+                                        <span>Sep</span>
+                                        <span>Oct</span>
+                                        <span>Nov</span>
+                                        <span>Dec</span>
+                                    </div>
+                                    <div class="chart-container mt-3">
+                                        <canvas id="timelineChart"></canvas>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <div class="card">
+                                        <div class="card-body">
+                                            <h5 class="card-title">Download Report</h5>
+                                            <p>Download a comprehensive report of current air quality analysis.</p>
+                                            <button class="btn btn-primary" onclick="downloadReport()">
+                                                <i class="bi bi-download me-2"></i>Download PDF
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <div class="card">
+                                        <div class="card-body">
+                                            <h5 class="card-title">AQI Alerts</h5>
+                                            <div id="aqiAlert" class="alert-card alert-warning">
+                                                <i class="bi bi-exclamation-triangle me-2"></i>
+                                                <span id="alertText">Your city AQI crossed 150 (Unhealthy).</span>
+                                            </div>
+                                            <div class="form-check form-switch">
+                                                <input class="form-check-input" type="checkbox" id="alertToggle" checked>
+                                                <label class="form-check-label" for="alertToggle">Enable AQI alerts</label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Health Tips Tab -->
+                <div class="tab-pane fade" id="health" role="tabpanel" aria-labelledby="health-tab">
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <h4 class="mb-3">Health Recommendations by AQI Level</h4>
+                            <div class="accordion" id="healthAccordion">
+                                <div class="accordion-item">
+                                    <h2 class="accordion-header" id="headingGood">
+                                        <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseGood" aria-expanded="true" aria-controls="collapseGood">
+                                            <div class="d-flex align-items-center">
+                                                <span class="aqi-badge aqi-good text-white rounded-circle me-3 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">0-50</span>
+                                                Good (Green)
+                                            </div>
+                                        </button>
+                                    </h2>
+                                    <div id="collapseGood" class="accordion-collapse collapse show" aria-labelledby="headingGood" data-bs-parent="#healthAccordion">
+                                        <div class="accordion-body">
+                                            <p>Air quality is satisfactory, and air pollution poses little or no risk.</p>
+                                            <h6>Recommended Actions:</h6>
+                                            <ul>
+                                                <li>Enjoy outdoor activities</li>
+                                                <li>Open windows to allow fresh air circulation</li>
+                                                <li>Ideal for outdoor exercise and activities</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="accordion-item">
+                                    <h2 class="accordion-header" id="headingModerate">
+                                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseModerate" aria-expanded="false" aria-controls="collapseModerate">
+                                            <div class="d-flex align-items-center">
+                                                <span class="aqi-badge aqi-moderate text-white rounded-circle me-3 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">51-100</span>
+                                                Moderate (Yellow)
+                                            </div>
+                                        </button>
+                                    </h2>
+                                    <div id="collapseModerate" class="accordion-collapse collapse" aria-labelledby="headingModerate" data-bs-parent="#healthAccordion">
+                                        <div class="accordion-body">
+                                            <p>Air quality is acceptable. However, there may be a risk for some people, particularly those who are unusually sensitive to air pollution.</p>
+                                            <h6>Recommended Actions:</h6>
+                                            <ul>
+                                                <li>Sensitive individuals should consider reducing prolonged outdoor exertion</li>
+                                                <li>Generally acceptable for most individuals</li>
+                                                <li>Monitor symptoms if you have respiratory conditions</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="accordion-item">
+                                    <h2 class="accordion-header" id="headingUnhealthySensitive">
+                                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseUnhealthySensitive" aria-expanded="false" aria-controls="collapseUnhealthySensitive">
+                                            <div class="d-flex align-items-center">
+                                                <span class="aqi-badge aqi-unhealthy-sensitive text-white rounded-circle me-3 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">101-150</span>
+                                                Unhealthy for Sensitive Groups (Orange)
+                                            </div>
+                                        </button>
+                                    </h2>
+                                    <div id="collapseUnhealthySensitive" class="accordion-collapse collapse" aria-labelledby="headingUnhealthySensitive" data-bs-parent="#healthAccordion">
+                                        <div class="accordion-body">
+                                            <p>Members of sensitive groups may experience health effects. The general public is less likely to be affected.</p>
+                                            <h6>Recommended Actions:</h6>
+                                            <ul>
+                                                <li>Children, elderly, and people with respiratory diseases should limit outdoor activities</li>
+                                                <li>Consider wearing a mask when going outside</li>
+                                                <li>Keep windows closed during peak pollution hours</li>
+                                                <li>Use air purifiers indoors if available</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="accordion-item">
+                                    <h2 class="accordion-header" id="headingUnhealthy">
+                                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseUnhealthy" aria-expanded="false" aria-controls="collapseUnhealthy">
+                                            <div class="d-flex align-items-center">
+                                                <span class="aqi-badge aqi-unhealthy text-white rounded-circle me-3 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">151-200</span>
+                                                Unhealthy (Red)
+                                            </div>
+                                        </button>
+                                    </h2>
+                                    <div id="collapseUnhealthy" class="accordion-collapse collapse" aria-labelledby="headingUnhealthy" data-bs-parent="#healthAccordion">
+                                        <div class="accordion-body">
+                                            <p>Everyone may begin to experience health effects; members of sensitive groups may experience more serious health effects.</p>
+                                            <h6>Recommended Actions:</h6>
+                                            <ul>
+                                                <li>Limit outdoor activities</li>
+                                                <li>Wear N95 masks when going outside</li>
+                                                <li>Keep windows closed and use air purifiers</li>
+                                                <li>Avoid strenuous outdoor exercise</li>
+                                                <li>People with heart or lung disease should follow their doctors' advice</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="accordion-item">
+                                    <h2 class="accordion-header" id="headingVeryUnhealthy">
+                                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseVeryUnhealthy" aria-expanded="false" aria-controls="collapseVeryUnhealthy">
+                                            <div class="d-flex align-items-center">
+                                                <span class="aqi-badge aqi-very-unhealthy text-white rounded-circle me-3 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">201-300</span>
+                                                Very Unhealthy (Purple)
+                                            </div>
+                                        </button>
+                                    </h2>
+                                    <div id="collapseVeryUnhealthy" class="accordion-collapse collapse" aria-labelledby="headingVeryUnhealthy" data-bs-parent="#healthAccordion">
+                                        <div class="accordion-body">
+                                            <p>Health warnings of emergency conditions. Everyone is likely to be affected.</p>
+                                            <h6>Recommended Actions:</h6>
+                                            <ul>
+                                                <li>Avoid all outdoor activities</li>
+                                                <li>Stay indoors with windows and doors closed</li>
+                                                <li>Use high-efficiency air purifiers</li>
+                                                <li>If you must go outside, wear a high-quality mask</li>
+                                                <li>People with heart or lung disease should remain indoors and avoid physical exertion</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="accordion-item">
+                                    <h2 class="accordion-header" id="headingHazardous">
+                                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseHazardous" aria-expanded="false" aria-controls="collapseHazardous">
+                                            <div class="d-flex align-items-center">
+                                                <span class="aqi-badge aqi-hazardous text-white rounded-circle me-3 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">301+</span>
+                                                Hazardous (Maroon)
+                                            </div>
+                                        </button>
+                                    </h2>
+                                    <div id="collapseHazardous" class="accordion-collapse collapse" aria-labelledby="headingHazardous" data-bs-parent="#healthAccordion">
+                                        <div class="accordion-body">
+                                            <p>Health alert: everyone may experience more serious health effects. Emergency conditions.</p>
+                                            <h6>Recommended Actions:</h6>
+                                            <ul>
+                                                <li>Remain indoors with windows and doors closed</li>
+                                                <li>Avoid all outdoor activities</li>
+                                                <li>Use high-efficiency air purifiers and avoid using fireplaces</li>
+                                                <li>Seek immediate medical attention if experiencing symptoms</li>
+                                                <li>Follow emergency instructions from local authorities</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <div class="card h-100">
+                                <div class="card-body">
+                                    <h5 class="card-title"><i class="bi bi-lungs text-danger me-2"></i>Protecting Your Lungs</h5>
+                                    <ul>
+                                        <li>Use N95 or N99 masks during high pollution days</li>
+                                        <li>Invest in a good quality air purifier for your home</li>
+                                        <li>Avoid exercising outdoors during high pollution periods</li>
+                                        <li>Keep your windows closed during peak traffic hours</li>
+                                        <li>Stay hydrated to help your body flush out toxins</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card h-100">
+                                <div class="card-body">
+                                    <h5 class="card-title"><i class="bi bi-house-heart text-success me-2"></i>Creating a Clean Home Environment</h5>
+                                    <ul>
+                                        <li>Indoor plants like spider plants, peace lilies, and aloe vera can help purify air</li>
+                                        <li>Regularly clean and vacuum your home to reduce dust and allergens</li>
+                                        <li>Avoid smoking indoors</li>
+                                        <li>Use natural cleaning products instead of chemical-based ones</li>
+                                        <li>Ensure proper ventilation when cooking</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-dark text-white py-4">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <h5><i class="bi bi-wind me-2"></i>Airlytics</h5>
+                    <p class="text-muted">Real-time air quality monitoring and analysis for major Indian cities.</p>
+                    <div class="d-flex gap-2 mt-3">
+                        <a href="#" class="text-white"><i class="bi bi-facebook fs-5"></i></a>
+                        <a href="#" class="text-white"><i class="bi bi-twitter fs-5"></i></a>
+                        <a href="#" class="text-white"><i class="bi bi-instagram fs-5"></i></a>
+                        <a href="#" class="text-white"><i class="bi bi-linkedin fs-5"></i></a>
+                    </div>
+                </div>
+                <div class="col-md-2 mb-3">
+                    <h6>Quick Links</h6>
+                    <ul class="list-unstyled">
+                        <li><a href="#" class="text-decoration-none text-muted">Home</a></li>
+                        <li><a href="#" class="text-decoration-none text-muted">About</a></li>
+                        <li><a href="#" class="text-decoration-none text-muted">Services</a></li>
+                        <li><a href="#" class="text-decoration-none text-muted">Contact</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <h6>Resources</h6>
+                    <ul class="list-unstyled">
+                        <li><a href="#" class="text-decoration-none text-muted">AQI Scale</a></li>
+                        <li><a href="#" class="text-decoration-none text-muted">Health Tips</a></li>
+                        <li><a href="#" class="text-decoration-none text-muted">Pollution Sources</a></li>
+                        <li><a href="#" class="text-decoration-none text-muted">Research</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <h6>Subscribe to Updates</h6>
+                    <p class="text-muted">Get the latest air quality alerts and updates.</p>
+                    <div class="input-group mb-3">
+                        <input type="email" class="form-control" placeholder="Your email">
+                        <button class="btn btn-primary" type="button">Subscribe</button>
+                    </div>
+                </div>
+            </div>
+            <hr class="my-4 bg-secondary">
+            <div class="text-center">
+                <p class="mb-0 text-muted">&copy; 2023 Airlytics. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Login Modal -->
+    <div class="modal fade" id="loginModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Login to Airlytics</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="loginForm" class="login-form" novalidate>
+                        <div class="mb-3">
+                            <label for="loginEmail" class="form-label">Email</label>
+                            <input type="email" class="form-control" id="loginEmail" required>
+                            <div class="invalid-feedback">Please enter a valid email.</div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="loginPassword" class="form-label">Password</label>
+                            <input type="password" class="form-control" id="loginPassword" required minlength="8">
+                            <div class="invalid-feedback">Password must be at least 8 characters.</div>
+                        </div>
+                        <div class="mb-3 form-check">
+                            <input type="checkbox" class="form-check-input" id="rememberMe">
+                            <label class="form-check-label" for="rememberMe">Remember me</label>
+                        </div>
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary">Login</button>
+                        </div>
+                        <div class="text-center mt-3">
+                            <a href="#" class="text-decoration-none">Forgot password?</a>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <div class="w-100 text-center">
+                        <p class="mb-0">Don't have an account? <a href="#" data-bs-toggle="modal" data-bs-target="#registerModal" data-bs-dismiss="modal">Register</a></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Registration Modal -->
+    <div class="modal fade" id="registerModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Create Airlytics Account</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="registerForm" class="register-form" novalidate>
+                        <div class="mb-3">
+                            <label for="registerName" class="form-label">Full Name</label>
+                            <input type="text" class="form-control" id="registerName" required>
+                            <div class="invalid-feedback">Please enter your name.</div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="registerEmail" class="form-label">Email</label>
+                            <input type="email" class="form-control" id="registerEmail" required>
+                            <div class="invalid-feedback">Please enter a valid email.</div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="registerPassword" class="form-label">Password</label>
+                            <input type="password" class="form-control" id="registerPassword" required minlength="8">
+                            <div class="invalid-feedback">Password must be at least 8 characters.</div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="confirmPassword" class="form-label">Confirm Password</label>
+                            <input type="password" class="form-control" id="confirmPassword" required>
+                            <div class="invalid-feedback">Passwords do not match.</div>
+                        </div>
+                        <div class="mb-3 form-check">
+                            <input type="checkbox" class="form-check-input" id="agreeTerms" required>
+                            <label class="form-check-label" for="agreeTerms">I agree to the <a href="#">Terms and Conditions</a></label>
+                            <div class="invalid-feedback">You must agree to the terms.</div>
+                        </div>
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary">Register</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- About Modal -->
+    <div class="modal fade" id="aboutModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">About Airlytics</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h5>Our Mission</h5>
+                            <p>Airlytics is committed to providing accurate, real-time air quality information to help people make informed decisions about their daily activities and protect their health from the harmful effects of air pollution.</p>
+                            
+                            <h5 class="mt-4">What We Do</h5>
+                            <ul>
+                                <li>Monitor air quality in major Indian cities</li>
+                                <li>Provide real-time AQI updates</li>
+                                <li>Offer health recommendations based on pollution levels</li>
+                                <li>Enable historical data analysis and trends</li>
+                                <li>Send alerts when pollution levels reach unhealthy ranges</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <h5>Our Team</h5>
+                            <p>Airlytics is developed by a team of environmental scientists, data analysts, and software engineers passionate about environmental conservation and public health.</p>
+                            
+                            <h5 class="mt-4">Contact Us</h5>
+                            <ul class="list-unstyled">
+                                <li><i class="bi bi-envelope me-2"></i> contact@airlytics.in</li>
+                                <li><i class="bi bi-telephone me-2"></i> +91 98765 43210</li>
+                                <li><i class="bi bi-geo-alt me-2"></i> Bangalore, India</li>
+                            </ul>
+                            
+                            <div class="mt-4">
+                                <h6>Follow Us</h6>
+                                <div class="d-flex gap-2">
+                                    <a href="#" class="text-dark"><i class="bi bi-facebook fs-5"></i></a>
+                                    <a href="#" class="text-dark"><i class="bi bi-twitter fs-5"></i></a>
+                                    <a href="#" class="text-dark"><i class="bi bi-instagram fs-5"></i></a>
+                                    <a href="#" class="text-dark"><i class="bi bi-linkedin fs-5"></i></a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Refresh Indicator -->
+    <div class="refresh-indicator">
+        <div class="alert alert-info d-flex align-items-center" role="alert">
+            <div class="spinner-border spinner-border-sm me-2" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <div>
+                Updating pollution data...
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification Toast Container -->
+    <div id="notificationContainer" class="toast-container position-fixed top-0 end-0 p-3"></div>
+
+    <!-- Bootstrap JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    
+    <!-- SortableJS -->
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+    
+    <!-- jsPDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    
+    <!-- html2canvas -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    
+    <!-- Custom JS -->
+    <script>
+        // Global variables
+        let map;
+        let markers = [];
+        let heatmapLayer;
+        let cities = [];
+        let charts = {};
+
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeApp();
+            setupEventListeners();
+        });
+
+        function initializeApp() {
+            // Initialize tooltips
+            const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+            tooltipTriggerList.map(function (tooltipTriggerEl) {
+                return new bootstrap.Tooltip(tooltipTriggerEl);
+            });
+
+            // Initialize dark mode toggle
+            const darkModeToggle = document.getElementById('darkModeToggle');
+            darkModeToggle.addEventListener('click', toggleDarkMode);
+
+            // Initialize tab switching
+            document.querySelectorAll('[data-bs-toggle="tab"]').forEach(tab => {
+                tab.addEventListener('shown.bs.tab', function(event) {
+                    if (event.target.getAttribute('href') === '#mapTab') {
+                        // Show loading spinner
+                        document.getElementById('mapLoading').style.display = 'block';
+                        
+                        // Wait a bit longer for the tab to be fully visible
+                        setTimeout(() => {
+                            initializeMap();
+                            
+                            // Fallback: if map still not initialized after 2 seconds, try again
+                            setTimeout(() => {
+                                if (!map || document.getElementById('mapLoading').style.display === 'block') {
+                                    initializeMap();
+                                }
+                            }, 2000);
+                        }, 300);
+                    }
+                });
+            });
+
+            // Initialize login form
+            const loginForm = document.getElementById('loginForm');
+            if (loginForm) {
+                loginForm.addEventListener('submit', handleLogin);
+            }
+
+            // Initialize registration form
+            const registerForm = document.getElementById('registerForm');
+            if (registerForm) {
+                registerForm.addEventListener('submit', handleRegistration);
+            }
+
+            // Initialize sortable for city cards
+            const pollutionCards = document.getElementById('pollutionCards');
+            if (pollutionCards) {
+                new Sortable(pollutionCards, {
+                    animation: 150,
+                    ghostClass: 'sortable-ghost'
+                });
+            }
+
+            // Initialize timeline slider
+            const timelineSlider = document.getElementById('timelineSlider');
+            if (timelineSlider) {
+                timelineSlider.addEventListener('input', updateTimelineChart);
+            }
+
+            // Initialize alert toggle
+            const alertToggle = document.getElementById('alertToggle');
+            if (alertToggle) {
+                alertToggle.addEventListener('change', toggleAlerts);
+            }
+
+            // Initialize heatmap toggle
+            const heatmapToggle = document.getElementById('heatmapToggle');
+            if (heatmapToggle) {
+                heatmapToggle.addEventListener('change', toggleHeatmap);
+            }
+
+            // Initialize city selects
+            updateCitySelects();
+            
+            // Initialize map when page loads if map tab is active
+            if (window.location.hash === '#mapTab' || document.querySelector('#map-tab.active')) {
+                document.getElementById('mapLoading').style.display = 'block';
+                setTimeout(initializeMap, 300);
+            }
+            
+            // Add window resize handler
+            window.addEventListener('resize', function() {
+                if (map) {
+                    setTimeout(() => {
+                        map.invalidateSize();
+                    }, 100);
+                }
+            });
+        }
+
+        function setupEventListeners() {
+            // Add event listeners for buttons
+            document.getElementById('darkModeToggle').addEventListener('click', toggleDarkMode);
+            
+            // Quick action cards
+            document.querySelectorAll('.action-card').forEach(card => {
+                card.addEventListener('click', function() {
+                    const targetTab = this.getAttribute('data-target');
+                    if (targetTab) {
+                        document.querySelector(`[data-bs-target="${targetTab}"]`).click();
+                    }
+                });
+            });
+        }
+
+        // Dark mode toggle
+        function toggleDarkMode() {
+            document.body.classList.toggle('dark-mode');
+            const icon = document.querySelector('#darkModeToggle i');
+            if (document.body.classList.contains('dark-mode')) {
+                icon.classList.remove('bi-moon-stars');
+                icon.classList.add('bi-sun');
+            } else {
+                icon.classList.remove('bi-sun');
+                icon.classList.add('bi-moon-stars');
+            }
+        }
+
+        // Map initialization
+        function initializeMap() {
+            const mapContainer = document.getElementById('map');
+            if (!mapContainer) return;
+            
+            // Check if Leaflet is loaded
+            if (typeof L === 'undefined') {
+                console.error('Leaflet library not loaded');
+                showNotification('Map library not loaded. Please refresh the page.', 'danger');
+                document.getElementById('mapLoading').style.display = 'none';
+                return;
+            }
+            
+            // Ensure the map container has proper dimensions
+            if (mapContainer.offsetHeight === 0 || mapContainer.offsetWidth === 0) {
+                // Force dimensions if needed
+                mapContainer.style.height = '500px';
+                mapContainer.style.width = '100%';
+                
+                // If still no dimensions, wait and retry
+                if (mapContainer.offsetHeight === 0 || mapContainer.offsetWidth === 0) {
+                    setTimeout(() => {
+                        initializeMap();
+                    }, 300);
+                    return;
+                }
+            }
+            
+            if (map) {
+                // If map already exists, just refresh it
+                setTimeout(() => {
+                    try {
+                        map.invalidateSize();
+                        updateMapMarkers();
+                        document.getElementById('mapLoading').style.display = 'none';
+                    } catch (error) {
+                        console.error('Error refreshing map:', error);
+                    }
+                }, 100);
+                return;
+            }
+
+            try {
+                // Create map centered on India
+                map = L.map('map').setView([20.5937, 78.9629], 5);
+
+                // Add tile layer (OpenStreetMap)
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                }).addTo(map);
+
+                // Add click event to map
+                map.on('click', function(e) {
+                    addCityFromMap(e.latlng);
+                });
+
+                // Add initial markers for tracked cities
+                updateMapMarkers();
+                
+                // Hide loading spinner
+                document.getElementById('mapLoading').style.display = 'none';
+            } catch (error) {
+                console.error('Error initializing map:', error);
+                showNotification('Error initializing map. Please refresh the page.', 'danger');
+                document.getElementById('mapLoading').style.display = 'none';
+            }
+        }
+
+        // Add city from map click
+        function addCityFromMap(latlng) {
+            // Simulate getting city name from coordinates (in a real app, you'd use reverse geocoding)
+            const cityNames = ['Mumbai', 'Delhi', 'Bangalore', 'Hyderabad', 'Ahmedabad', 'Chennai', 'Kolkata', 'Pune', 'Jaipur', 'Lucknow'];
+            const randomCity = cityNames[Math.floor(Math.random() * cityNames.length)];
+            
+            // Add the city to the tracker
+            addCityToTracker(randomCity, latlng.lat, latlng.lng);
+            
+            // Show notification
+            showNotification(`Added ${randomCity} to your tracker`, 'success');
+        }
+
+        // Search location on map
+        function searchMapLocation() {
+            const locationInput = document.getElementById('mapLocationInput');
+            const location = locationInput.value.trim();
+            
+            if (!location) return;
+            
+            // Check if map is initialized, if not, initialize it
+            if (!map) {
+                // Show loading spinner
+                document.getElementById('mapLoading').style.display = 'block';
+                
+                // Make sure the map tab is active
+                const mapTab = document.getElementById('map-tab');
+                if (!mapTab.classList.contains('active')) {
+                    mapTab.click();
+                }
+                
+                // Initialize the map with multiple attempts
+                let attempts = 0;
+                const tryInitialize = () => {
+                    attempts++;
+                    initializeMap();
+                    
+                    if (map) {
+                        // Map initialized, proceed with search
+                        performSearch(location);
+                    } else if (attempts < 3) {
+                        // Try again after a delay
+                        setTimeout(tryInitialize, 500);
+                    } else {
+                        // Failed after multiple attempts
+                        showNotification('Map is not ready yet. Please try again.', 'warning');
+                        document.getElementById('mapLoading').style.display = 'none';
+                    }
+                };
+                
+                tryInitialize();
+                return;
+            }
+            
+            // If map is already initialized, perform search directly
+            performSearch(location);
+        }
+
+        // Extract the search logic into a separate function
+        function performSearch(location) {
+            const cityCoordinates = {
+                'mumbai': [19.0760, 72.8777],
+                'delhi': [28.7041, 77.1025],
+                'bangalore': [12.9716, 77.5946],
+                'hyderabad': [17.3850, 78.4867],
+                'ahmedabad': [23.0225, 72.5714],
+                'chennai': [13.0827, 80.2707],
+                'kolkata': [22.5726, 88.3639],
+                'pune': [18.5204, 73.8567],
+                'jaipur': [26.9124, 75.7873],
+                'lucknow': [26.8467, 80.9462]
+            };
+            
+            const key = location.toLowerCase();
+            if (cityCoordinates[key]) {
+                try {
+                    map.setView(cityCoordinates[key], 10);
+                    
+                    // Add a marker
+                    L.marker(cityCoordinates[key])
+                        .addTo(map)
+                        .bindPopup(`<b>${location}</b>`)
+                        .openPopup();
+                        
+                    // Add to tracker
+                    addCityToTracker(location, cityCoordinates[key][0], cityCoordinates[key][1]);
+                } catch (error) {
+                    console.error('Error performing search:', error);
+                    showNotification('Error performing search. Please try again.', 'warning');
+                }
+            } else {
+                showNotification('City not found. Try Mumbai, Delhi, Bangalore, etc.', 'warning');
+            }
+            
+            document.getElementById('mapLocationInput').value = '';
+            document.getElementById('mapLoading').style.display = 'none';
+        }
+
+        // Toggle heatmap
+        function toggleHeatmap() {
+            const heatmapToggle = document.getElementById('heatmapToggle');
+            
+            if (heatmapToggle.checked) {
+                // In a real app, you would add a heatmap layer
+                // For demo, we'll just show a notification
+                showNotification('Pollution heatmap enabled', 'info');
+            } else {
+                // Remove heatmap layer
+                showNotification('Pollution heatmap disabled', 'info');
+            }
+        }
+
+        // Add city to tracker
+        function addCityToTracker(name, lat, lng) {
+            // Check if city already exists
+            if (cities.find(city => city.name.toLowerCase() === name.toLowerCase())) {
+                showNotification(`${name} is already in your tracker`, 'warning');
+                return;
+            }
+            
+            // Create city object
+            const city = {
+                id: Date.now(),
+                name: name,
+                lat: lat,
+                lng: lng,
+                aqi: Math.floor(Math.random() * 300) + 50,
+                pm25: Math.floor(Math.random() * 100) + 10,
+                pm10: Math.floor(Math.random() * 150) + 20,
+                no2: Math.floor(Math.random() * 80) + 10,
+                o3: Math.floor(Math.random() * 100) + 20,
+                so2: Math.floor(Math.random() * 60) + 5,
+                co: Math.floor(Math.random() * 10) + 1,
+                lastUpdated: new Date()
+            };
+            
+            // Add to cities array
+            cities.push(city);
+            
+            // Create card
+            createCityCard(city);
+            
+            // Update map markers
+            updateMapMarkers();
+            
+            // Update city selects
+            updateCitySelects();
+            
+            // Update last updated time
+            updateLastUpdatedTime();
+        }
+
+        // Create city card
+        function createCityCard(city) {
+            const pollutionCards = document.getElementById('pollutionCards');
+            
+            // Determine AQI level and color
+            let aqiLevel, aqiColor;
+            if (city.aqi <= 50) {
+                aqiLevel = 'Good';
+                aqiColor = 'success';
+            } else if (city.aqi <= 100) {
+                aqiLevel = 'Moderate';
+                aqiColor = 'warning';
+            } else if (city.aqi <= 150) {
+                aqiLevel = 'Unhealthy for Sensitive Groups';
+                aqiColor = 'orange';
+            } else if (city.aqi <= 200) {
+                aqiLevel = 'Unhealthy';
+                aqiColor = 'danger';
+            } else if (city.aqi <= 300) {
+                aqiLevel = 'Very Unhealthy';
+                aqiColor = 'purple';
+            } else {
+                aqiLevel = 'Hazardous';
+                aqiColor = 'maroon';
+            }
+            
+            // Create card element
+            const card = document.createElement('div');
+            card.className = 'city-card';
+            card.id = `city-${city.id}`;
+            card.innerHTML = `
+                <div class="card h-100">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <h5 class="card-title">${city.name}</h5>
+                                <p class="text-muted mb-0">Last updated: ${formatDate(city.lastUpdated)}</p>
+                            </div>
+                            <button class="btn btn-sm btn-outline-danger" onclick="removeCity(${city.id})">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </div>
+                        <div class="d-flex align-items-center my-3">
+                            <div class="aqi-badge aqi-${aqiColor} me-3">
+                                ${city.aqi}
+                            </div>
+                            <div>
+                                <h6 class="mb-0">AQI: ${aqiLevel}</h6>
+                                <small class="text-muted">Air Quality Index</small>
+                            </div>
+                        </div>
+                        <div class="row mt-3">
+                            <div class="col-6">
+                                <small class="text-muted">PM2.5</small>
+                                <div class="fw-bold">${city.pm25} µg/m³</div>
+                            </div>
+                            <div class="col-6">
+                                <small class="text-muted">PM10</small>
+                                <div class="fw-bold">${city.pm10} µg/m³</div>
+                            </div>
+                            <div class="col-6">
+                                <small class="text-muted">NO₂</small>
+                                <div class="fw-bold">${city.no2} ppb</div>
+                            </div>
+                            <div class="col-6">
+                                <small class="text-muted">O₃</small>
+                                <div class="fw-bold">${city.o3} ppb</div>
+                            </div>
+                        </div>
+                        <div class="d-grid mt-3">
+                            <button class="btn btn-sm btn-outline-primary" onclick="viewCityAnalysis(${city.id})">
+                                View Analysis
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            pollutionCards.appendChild(card);
+        }
+
+        // Remove city from tracker
+        function removeCity(cityId) {
+            // Remove from cities array
+            cities = cities.filter(city => city.id !== cityId);
+            
+            // Remove card from DOM
+            const card = document.getElementById(`city-${cityId}`);
+            if (card) {
+                card.remove();
+            }
+            
+            // Update map markers
+            updateMapMarkers();
+            
+            // Update city selects
+            updateCitySelects();
+            
+            // Show notification
+            showNotification('City removed from tracker', 'info');
+        }
+
+        // Update map markers
+        function updateMapMarkers() {
+            if (!map) return;
+            
+            // Clear existing markers
+            markers.forEach(marker => map.removeLayer(marker));
+            markers = [];
+            
+            // Add markers for each city
+            cities.forEach(city => {
+                // Determine marker color based on AQI
+                let markerColor;
+                if (city.aqi <= 50) {
+                    markerColor = 'green';
+                } else if (city.aqi <= 100) {
+                    markerColor = 'yellow';
+                } else if (city.aqi <= 150) {
+                    markerColor = 'orange';
+                } else if (city.aqi <= 200) {
+                    markerColor = 'red';
+                } else if (city.aqi <= 300) {
+                    markerColor = 'purple';
+                } else {
+                    markerColor = 'maroon';
+                }
+                
+                // Create custom icon
+                const icon = L.divIcon({
+                    className: 'custom-div-icon',
+                    html: `<div style="background-color: ${markerColor}; width: 20px; height: 20px; border-radius: 50%; border: 2px solid white;"></div>`,
+                    iconSize: [20, 20],
+                    iconAnchor: [10, 10]
+                });
+                
+                // Create marker
+                const marker = L.marker([city.lat, city.lng], { icon: icon })
+                    .addTo(map)
+                    .bindPopup(`
+                        <div>
+                            <h5>${city.name}</h5>
+                            <p>AQI: ${city.aqi} (${getAqiLevel(city.aqi)})</p>
+                            <button class="btn btn-sm btn-primary" onclick="viewCityAnalysis(${city.id})">View Analysis</button>
+                        </div>
+                    `);
+                
+                markers.push(marker);
+            });
+        }
+
+        // Get AQI level from value
+        function getAqiLevel(aqi) {
+            if (aqi <= 50) return 'Good';
+            if (aqi <= 100) return 'Moderate';
+            if (aqi <= 150) return 'Unhealthy for Sensitive Groups';
+            if (aqi <= 200) return 'Unhealthy';
+            if (aqi <= 300) return 'Very Unhealthy';
+            return 'Hazardous';
+        }
+
+        // Update city selects
+        function updateCitySelects() {
+            const city1Select = document.getElementById('city1Select');
+            const city2Select = document.getElementById('city2Select');
+            
+            if (!city1Select || !city2Select) return;
+            
+            // Clear existing options
+            city1Select.innerHTML = '<option value="">Select first city</option>';
+            city2Select.innerHTML = '<option value="">Select second city</option>';
+            
+            // Add options for each city
+            cities.forEach(city => {
+                const option1 = document.createElement('option');
+                option1.value = city.id;
+                option1.textContent = city.name;
+                city1Select.appendChild(option1);
+                
+                const option2 = document.createElement('option');
+                option2.value = city.id;
+                option2.textContent = city.name;
+                city2Select.appendChild(option2);
+            });
+        }
+
+        // Format date
+        function formatDate(date) {
+            return new Date(date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        }
+
+        // Update last updated time
+        function updateLastUpdatedTime() {
+            const updateTimeElement = document.getElementById('updateTime');
+            if (updateTimeElement) {
+                updateTimeElement.textContent = new Date().toLocaleTimeString();
+            }
+        }
+
+        // Show notification
+        function showNotification(message, type = 'info') {
+            const container = document.getElementById('notificationContainer');
+            
+            const toast = document.createElement('div');
+            toast.className = `toast align-items-center text-white bg-${type === 'success' ? 'success' : type === 'warning' ? 'warning' : type === 'danger' ? 'danger' : 'primary'} border-0`;
+            toast.setAttribute('role', 'alert');
+            toast.setAttribute('aria-live', 'assertive');
+            toast.setAttribute('aria-atomic', 'true');
+            
+            toast.innerHTML = `
+                <div class="d-flex">
+                    <div class="toast-body">
+                        ${message}
+                    </div>
+                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                </div>
+            `;
+            
+            container.appendChild(toast);
+            
+            const bsToast = new bootstrap.Toast(toast, {
+                autohide: true,
+                delay: 3000
+            });
+            
+            bsToast.show();
+            
+            // Remove from DOM after hidden
+            toast.addEventListener('hidden.bs.toast', function() {
+                toast.remove();
+            });
+        }
+
+        // Add random city
+        function addRandomCity() {
+            const cityNames = [
+                { name: 'Mumbai', lat: 19.0760, lng: 72.8777 },
+                { name: 'Delhi', lat: 28.7041, lng: 77.1025 },
+                { name: 'Bangalore', lat: 12.9716, lng: 77.5946 },
+                { name: 'Hyderabad', lat: 17.3850, lng: 78.4867 },
+                { name: 'Ahmedabad', lat: 23.0225, lng: 72.5714 },
+                { name: 'Chennai', lat: 13.0827, lng: 80.2707 },
+                { name: 'Kolkata', lat: 22.5726, lng: 88.3639 },
+                { name: 'Pune', lat: 18.5204, lng: 73.8567 },
+                { name: 'Jaipur', lat: 26.9124, lng: 75.7873 },
+                { name: 'Lucknow', lat: 26.8467, lng: 80.9462 }
+            ];
+            
+            // Filter out cities already in tracker
+            const availableCities = cityNames.filter(city => 
+                !cities.find(c => c.name.toLowerCase() === city.name.toLowerCase())
+            );
+            
+            if (availableCities.length === 0) {
+                showNotification('All cities are already in your tracker', 'warning');
+                return;
+            }
+            
+            // Pick a random city
+            const randomCity = availableCities[Math.floor(Math.random() * availableCities.length)];
+            
+            // Add to tracker
+            addCityToTracker(randomCity.name, randomCity.lat, randomCity.lng);
+            
+            // Show notification
+            showNotification(`Added ${randomCity.name} to your tracker`, 'success');
+        }
+
+        // Refresh all cities data
+        function refreshAllCitiesData() {
+            if (cities.length === 0) {
+                showNotification('No cities to refresh', 'warning');
+                return;
+            }
+            
+            // Show refresh indicator
+            const refreshIndicator = document.querySelector('.refresh-indicator');
+            refreshIndicator.style.display = 'block';
+            
+            // Simulate API call delay
+            setTimeout(() => {
+                // Update each city with new random data
+                cities.forEach(city => {
+                    city.aqi = Math.floor(Math.random() * 300) + 50;
+                    city.pm25 = Math.floor(Math.random() * 100) + 10;
+                    city.pm10 = Math.floor(Math.random() * 150) + 20;
+                    city.no2 = Math.floor(Math.random() * 80) + 10;
+                    city.o3 = Math.floor(Math.random() * 100) + 20;
+                    city.so2 = Math.floor(Math.random() * 60) + 5;
+                    city.co = Math.floor(Math.random() * 10) + 1;
+                    city.lastUpdated = new Date();
+                    
+                    // Update card in DOM
+                    updateCityCard(city);
+                });
+                
+                // Update map markers
+                updateMapMarkers();
+                
+                // Update last updated time
+                updateLastUpdatedTime();
+                
+                // Hide refresh indicator
+                refreshIndicator.style.display = 'none';
+                
+                // Show notification
+                showNotification('All city data refreshed', 'success');
+            }, 1500);
+        }
+
+        // Update city card in DOM
+        function updateCityCard(city) {
+            const card = document.getElementById(`city-${city.id}`);
+            if (!card) return;
+            
+            // Determine AQI level and color
+            let aqiLevel, aqiColor;
+            if (city.aqi <= 50) {
+                aqiLevel = 'Good';
+                aqiColor = 'success';
+            } else if (city.aqi <= 100) {
+                aqiLevel = 'Moderate';
+                aqiColor = 'warning';
+            } else if (city.aqi <= 150) {
+                aqiLevel = 'Unhealthy for Sensitive Groups';
+                aqiColor = 'orange';
+            } else if (city.aqi <= 200) {
+                aqiLevel = 'Unhealthy';
+                aqiColor = 'danger';
+            } else if (city.aqi <= 300) {
+                aqiLevel = 'Very Unhealthy';
+                aqiColor = 'purple';
+            } else {
+                aqiLevel = 'Hazardous';
+                aqiColor = 'maroon';
+            }
+            
+            // Update card content
+            card.innerHTML = `
+                <div class="card h-100">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <h5 class="card-title">${city.name}</h5>
+                                <p class="text-muted mb-0">Last updated: ${formatDate(city.lastUpdated)}</p>
+                            </div>
+                            <button class="btn btn-sm btn-outline-danger" onclick="removeCity(${city.id})">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </div>
+                        <div class="d-flex align-items-center my-3">
+                            <div class="aqi-badge aqi-${aqiColor} me-3">
+                                ${city.aqi}
+                            </div>
+                            <div>
+                                <h6 class="mb-0">AQI: ${aqiLevel}</h6>
+                                <small class="text-muted">Air Quality Index</small>
+                            </div>
+                        </div>
+                        <div class="row mt-3">
+                            <div class="col-6">
+                                <small class="text-muted">PM2.5</small>
+                                <div class="fw-bold">${city.pm25} µg/m³</div>
+                            </div>
+                            <div class="col-6">
+                                <small class="text-muted">PM10</small>
+                                <div class="fw-bold">${city.pm10} µg/m³</div>
+                            </div>
+                            <div class="col-6">
+                                <small class="text-muted">NO₂</small>
+                                <div class="fw-bold">${city.no2} ppb</div>
+                            </div>
+                            <div class="col-6">
+                                <small class="text-muted">O₃</small>
+                                <div class="fw-bold">${city.o3} ppb</div>
+                            </div>
+                        </div>
+                        <div class="d-grid mt-3">
+                            <button class="btn btn-sm btn-outline-primary" onclick="viewCityAnalysis(${city.id})">
+                                View Analysis
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Clear all cities
+        function clearAllCities() {
+            if (cities.length === 0) {
+                showNotification('No cities to clear', 'warning');
+                return;
+            }
+            
+            // Clear cities array
+            cities = [];
+            
+            // Clear cards from DOM
+            const pollutionCards = document.getElementById('pollutionCards');
+            pollutionCards.innerHTML = '';
+            
+            // Update map markers
+            updateMapMarkers();
+            
+            // Update city selects
+            updateCitySelects();
+            
+            // Show notification
+            showNotification('All cities cleared from tracker', 'info');
+        }
+
+        // View city analysis
+        function viewCityAnalysis(cityId) {
+            const city = cities.find(c => c.id === cityId);
+            if (!city) return;
+            
+            // Switch to analysis tab
+            document.getElementById('analysis-tab').click();
+            
+            // Update analysis header
+            document.getElementById('analysisCityName').textContent = `${city.name} Analysis`;
+            
+            // Show single city pollutants
+            document.getElementById('singleCityPollutants').style.display = 'block';
+            document.getElementById('allCitiesPollutants').style.display = 'none';
+            
+            // Update health impact card
+            updateHealthImpactCard(city);
+            
+            // Update forecast
+            updateForecast(city);
+            
+            // Update pollutant chart
+            updateCityPollutantChart(city);
+            
+            // Update environmental data
+            updateEnvironmentalData(city);
+            
+            // Scroll to top
+            window.scrollTo(0, 0);
+        }
+
+        // Show all cities analysis
+        function showAllCitiesAnalysis() {
+            // Update analysis header
+            document.getElementById('analysisCityName').textContent = 'City Analysis';
+            
+            // Show all cities pollutants
+            document.getElementById('singleCityPollutants').style.display = 'none';
+            document.getElementById('allCitiesPollutants').style.display = 'block';
+            
+            // Update health impact card
+            updateHealthImpactCard(null);
+            
+            // Update forecast
+            updateForecast(null);
+            
+            // Update pollutant charts
+            updateAllCitiesPollutantCharts();
+            
+            // Update city comparison
+            updateCityComparison();
+            
+            // Update environmental data
+            updateEnvironmentalData(null);
+        }
+
+        // Update health impact card
+        function updateHealthImpactCard(city) {
+            const healthTitle = document.getElementById('healthTitle');
+            const healthDescription = document.getElementById('healthDescription');
+            const healthImpactCard = document.getElementById('healthImpactCard');
+            
+            if (!city) {
+                // Show general health impact
+                healthTitle.textContent = 'Air Quality Overview';
+                healthDescription.textContent = 'Monitor air quality in your tracked cities to protect your health.';
+                
+                // Determine overall health impact based on all cities
+                const avgAqi = cities.reduce((sum, city) => sum + city.aqi, 0) / cities.length;
+                
+                if (avgAqi <= 50) {
+                    healthImpactCard.className = 'health-card health-good';
+                } else if (avgAqi <= 100) {
+                    healthImpactCard.className = 'health-card health-moderate';
+                } else if (avgAqi <= 150) {
+                    healthImpactCard.className = 'health-card health-unhealthy-sensitive';
+                } else if (avgAqi <= 200) {
+                    healthImpactCard.className = 'health-card health-unhealthy';
+                } else if (avgAqi <= 300) {
+                    healthImpactCard.className = 'health-card health-very-unhealthy';
+                } else {
+                    healthImpactCard.className = 'health-card health-hazardous';
+                }
+                
+                return;
+            }
+            
+            // Update based on city AQI
+            if (city.aqi <= 50) {
+                healthTitle.textContent = 'Today\'s air is Good - Enjoy outdoor activities!';
+                healthDescription.textContent = 'Air quality is satisfactory, and air pollution poses little or no risk.';
+                healthImpactCard.className = 'health-card health-good';
+            } else if (city.aqi <= 100) {
+                healthTitle.textContent = 'Today\'s air is Moderate - Sensitive people should consider reducing prolonged outdoor exertion.';
+                healthDescription.textContent = 'Air quality is acceptable for most people. However, there may be a risk for some people, particularly those who are unusually sensitive to air pollution.';
+                healthImpactCard.className = 'health-card health-moderate';
+            } else if (city.aqi <= 150) {
+                healthTitle.textContent = 'Today\'s air is Unhealthy for Sensitive Groups - Limit outdoor activities if you are in a sensitive group.';
+                healthDescription.textContent = 'Members of sensitive groups may experience health effects. The general public is less likely to be affected.';
+                healthImpactCard.className = 'health-card health-unhealthy-sensitive';
+            } else if (city.aqi <= 200) {
+                healthTitle.textContent = 'Today\'s air is Unhealthy - Everyone should reduce outdoor activities.';
+                healthDescription.textContent = 'Everyone may begin to experience health effects; members of sensitive groups may experience more serious health effects.';
+                healthImpactCard.className = 'health-card health-unhealthy';
+            } else if (city.aqi <= 300) {
+                healthTitle.textContent = 'Today\'s air is Very Unhealthy - Avoid outdoor activities.';
+                healthDescription.textContent = 'Health warnings of emergency conditions. Everyone is likely to be affected.';
+                healthImpactCard.className = 'health-card health-very-unhealthy';
+            } else {
+                healthTitle.textContent = 'Today\'s air is Hazardous - Remain indoors and avoid outdoor activities.';
+                healthDescription.textContent = 'Health alert: everyone may experience more serious health effects. Emergency conditions.';
+                healthImpactCard.className = 'health-card health-hazardous';
+            }
+        }
+
+        // Update forecast
+        function updateForecast(city) {
+            const forecastContainer = document.getElementById('forecastContainer');
+            
+            if (!city) {
+                forecastContainer.innerHTML = '<p class="text-center text-muted">Select a city to view forecast</p>';
+                return;
+            }
+            
+            // Generate forecast data
+            const forecastData = [
+                { day: 'Today', temp: Math.floor(Math.random() * 10) + 25, condition: 'Sunny', aqi: city.aqi },
+                { day: 'Tomorrow', temp: Math.floor(Math.random() * 10) + 25, condition: 'Partly Cloudy', aqi: Math.floor(Math.random() * 300) + 50 },
+                { day: 'Day After', temp: Math.floor(Math.random() * 10) + 25, condition: 'Cloudy', aqi: Math.floor(Math.random() * 300) + 50 }
+            ];
+            
+            // Create forecast cards
+            forecastContainer.innerHTML = '';
+            forecastData.forEach(data => {
+                const aqiLevel = getAqiLevel(data.aqi);
+                let aqiColor;
+                if (data.aqi <= 50) aqiColor = 'success';
+                else if (data.aqi <= 100) aqiColor = 'warning';
+                else if (data.aqi <= 150) aqiColor = 'orange';
+                else if (data.aqi <= 200) aqiColor = 'danger';
+                else if (data.aqi <= 300) aqiColor = 'purple';
+                else aqiColor = 'maroon';
+                
+                const card = document.createElement('div');
+                card.className = 'col-md-4';
+                card.innerHTML = `
+                    <div class="card h-100">
+                        <div class="card-body text-center">
+                            <h5>${data.day}</h5>
+                            <div class="my-3">
+                                <i class="bi bi-${data.condition === 'Sunny' ? 'sun' : data.condition === 'Partly Cloudy' ? 'cloud-sun' : 'cloud'} fs-1"></i>
+                            </div>
+                            <p class="mb-1">${data.temp}°C</p>
+                            <p class="mb-1">${data.condition}</p>
+                            <div class="d-flex justify-content-center align-items-center mt-2">
+                                <span class="badge bg-${aqiColor}">AQI: ${data.aqi}</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                forecastContainer.appendChild(card);
+            });
+            
+            // Update forecast chart
+            updateForecastChart(forecastData);
+        }
+
+        // Update forecast chart
+        function updateForecastChart(forecastData) {
+            const ctx = document.getElementById('forecastChart').getContext('2d');
+            
+            // Destroy existing chart if it exists
+            if (charts.forecast) {
+                charts.forecast.destroy();
+            }
+            
+            charts.forecast = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: forecastData.map(d => d.day),
+                    datasets: [{
+                        label: 'AQI',
+                        data: forecastData.map(d => d.aqi),
+                        borderColor: 'rgb(75, 192, 192)',
+                        backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                        tension: 0.1,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'AQI'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Update city pollutant chart
+        function updateCityPollutantChart(city) {
+            const ctx = document.getElementById('cityPollutantChart').getContext('2d');
+            
+            // Destroy existing chart if it exists
+            if (charts.cityPollutant) {
+                charts.cityPollutant.destroy();
+            }
+            
+            charts.cityPollutant = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['PM2.5', 'PM10', 'NO₂', 'O₃', 'SO₂', 'CO'],
+                    datasets: [{
+                        label: 'Concentration',
+                        data: [city.pm25, city.pm10, city.no2, city.o3, city.so2, city.co],
+                        backgroundColor: [
+                            'rgba(255, 99, 132, 0.7)',
+                            'rgba(54, 162, 235, 0.7)',
+                            'rgba(255, 206, 86, 0.7)',
+                            'rgba(75, 192, 192, 0.7)',
+                            'rgba(153, 102, 255, 0.7)',
+                            'rgba(255, 159, 64, 0.7)'
+                        ],
+                        borderColor: [
+                            'rgb(255, 99, 132)',
+                            'rgb(54, 162, 235)',
+                            'rgb(255, 206, 86)',
+                            'rgb(75, 192, 192)',
+                            'rgb(153, 102, 255)',
+                            'rgb(255, 159, 64)'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Concentration'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Update all cities pollutant charts
+        function updateAllCitiesPollutantCharts() {
+            // PM2.5 chart
+            const pm25Ctx = document.getElementById('pm25Chart').getContext('2d');
+            if (charts.pm25) charts.pm25.destroy();
+            
+            charts.pm25 = new Chart(pm25Ctx, {
+                type: 'line',
+                data: {
+                    labels: cities.map(c => c.name),
+                    datasets: [{
+                        label: 'PM2.5',
+                        data: cities.map(c => c.pm25),
+                        borderColor: 'rgb(255, 99, 132)',
+                        backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                        tension: 0.1,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+            
+            // PM10 chart
+            const pm10Ctx = document.getElementById('pm10Chart').getContext('2d');
+            if (charts.pm10) charts.pm10.destroy();
+            
+            charts.pm10 = new Chart(pm10Ctx, {
+                type: 'line',
+                data: {
+                    labels: cities.map(c => c.name),
+                    datasets: [{
+                        label: 'PM10',
+                        data: cities.map(c => c.pm10),
+                        borderColor: 'rgb(54, 162, 235)',
+                        backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                        tension: 0.1,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+            
+            // NO2 chart
+            const no2Ctx = document.getElementById('no2Chart').getContext('2d');
+            if (charts.no2) charts.no2.destroy();
+            
+            charts.no2 = new Chart(no2Ctx, {
+                type: 'line',
+                data: {
+                    labels: cities.map(c => c.name),
+                    datasets: [{
+                        label: 'NO₂',
+                        data: cities.map(c => c.no2),
+                        borderColor: 'rgb(255, 206, 86)',
+                        backgroundColor: 'rgba(255, 206, 86, 0.2)',
+                        tension: 0.1,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+            
+            // O3 chart
+            const o3Ctx = document.getElementById('o3Chart').getContext('2d');
+            if (charts.o3) charts.o3.destroy();
+            
+            charts.o3 = new Chart(o3Ctx, {
+                type: 'line',
+                data: {
+                    labels: cities.map(c => c.name),
+                    datasets: [{
+                        label: 'O₃',
+                        data: cities.map(c => c.o3),
+                        borderColor: 'rgb(75, 192, 192)',
+                        backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                        tension: 0.1,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        }
+
+        // Update city comparison
+        function updateCityComparison() {
+            // Update most and least polluted cities
+            if (cities.length > 0) {
+                const sortedCities = [...cities].sort((a, b) => b.aqi - a.aqi);
+                const mostPolluted = sortedCities[0];
+                const leastPolluted = sortedCities[sortedCities.length - 1];
+                
+                document.getElementById('mostPollutedCity').textContent = mostPolluted.name;
+                document.getElementById('mostPollutedAQI').textContent = mostPolluted.aqi;
+                
+                document.getElementById('leastPollutedCity').textContent = leastPolluted.name;
+                document.getElementById('leastPollutedAQI').textContent = leastPolluted.aqi;
+            } else {
+                document.getElementById('mostPollutedCity').textContent = '--';
+                document.getElementById('mostPollutedAQI').textContent = '--';
+                
+                document.getElementById('leastPollutedCity').textContent = '--';
+                document.getElementById('leastPollutedAQI').textContent = '--';
+            }
+        }
+
+        // Compare cities
+        function compareCities() {
+            const city1Select = document.getElementById('city1Select');
+            const city2Select = document.getElementById('city2Select');
+            
+            const city1Id = parseInt(city1Select.value);
+            const city2Id = parseInt(city2Select.value);
+            
+            if (!city1Id || !city2Id) {
+                showNotification('Please select two cities to compare', 'warning');
+                return;
+            }
+            
+            const city1 = cities.find(c => c.id === city1Id);
+            const city2 = cities.find(c => c.id === city2Id);
+            
+            if (!city1 || !city2) return;
+            
+            const ctx = document.getElementById('cityComparisonChart').getContext('2d');
+            
+            // Destroy existing chart if it exists
+            if (charts.cityComparison) {
+                charts.cityComparison.destroy();
+            }
+            
+            charts.cityComparison = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['PM2.5', 'PM10', 'NO₂', 'O₃', 'SO₂', 'CO', 'AQI'],
+                    datasets: [
+                        {
+                            label: city1.name,
+                            data: [city1.pm25, city1.pm10, city1.no2, city1.o3, city1.so2, city1.co, city1.aqi],
+                            backgroundColor: 'rgba(54, 162, 235, 0.7)',
+                            borderColor: 'rgb(54, 162, 235)',
+                            borderWidth: 1
+                        },
+                        {
+                            label: city2.name,
+                            data: [city2.pm25, city2.pm10, city2.no2, city2.o3, city2.so2, city2.co, city2.aqi],
+                            backgroundColor: 'rgba(255, 99, 132, 0.7)',
+                            borderColor: 'rgb(255, 99, 132)',
+                            borderWidth: 1
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        }
+
+        // Update environmental data
+        function updateEnvironmentalData(city) {
+            if (!city) {
+                document.getElementById('temperature').textContent = '--°C';
+                document.getElementById('humidity').textContent = '--%';
+                document.getElementById('windSpeed').textContent = '-- km/h';
+                
+                // Update correlation chart with random data
+                updateCorrelationChart(null);
+                return;
+            }
+            
+            // Generate random weather data
+            const temperature = Math.floor(Math.random() * 15) + 20; // 20-35°C
+            const humidity = Math.floor(Math.random() * 40) + 40; // 40-80%
+            const windSpeed = Math.floor(Math.random() * 20) + 5; // 5-25 km/h
+            
+            document.getElementById('temperature').textContent = `${temperature}°C`;
+            document.getElementById('humidity').textContent = `${humidity}%`;
+            document.getElementById('windSpeed').textContent = `${windSpeed} km/h`;
+            
+            // Update correlation chart
+            updateCorrelationChart(city);
+        }
+
+        // Update correlation chart
+        function updateCorrelationChart(city) {
+            const ctx = document.getElementById('correlationChart').getContext('2d');
+            
+            // Destroy existing chart if it exists
+            if (charts.correlation) {
+                charts.correlation.destroy();
+            }
+            
+            // Generate data points
+            const dataPoints = [];
+            for (let i = 0; i < 10; i++) {
+                const humidity = Math.floor(Math.random() * 40) + 40;
+                const pm25 = Math.floor(Math.random() * 100) + 10;
+                dataPoints.push({ x: humidity, y: pm25 });
+            }
+            
+            charts.correlation = new Chart(ctx, {
+                type: 'scatter',
+                data: {
+                    datasets: [{
+                        label: 'Humidity vs PM2.5',
+                        data: dataPoints,
+                        backgroundColor: 'rgba(255, 99, 132, 0.7)'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Humidity (%)'
+                            }
+                        },
+                        y: {
+                            title: {
+                                display: true,
+                                text: 'PM2.5 (µg/m³)'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Update timeline chart
+        function updateTimelineChart() {
+            const timelineSlider = document.getElementById('timelineSlider');
+            const month = parseInt(timelineSlider.value);
+            
+            const ctx = document.getElementById('timelineChart').getContext('2d');
+            
+            // Destroy existing chart if it exists
+            if (charts.timeline) {
+                charts.timeline.destroy();
+            }
+            
+            // Generate data for each month up to selected month
+            const labels = [];
+            const data = [];
+            
+            for (let i = 1; i <= month; i++) {
+                labels.push(getMonthName(i));
+                data.push(Math.floor(Math.random() * 200) + 50);
+            }
+            
+            charts.timeline = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Average AQI',
+                        data: data,
+                        borderColor: 'rgb(153, 102, 255)',
+                        backgroundColor: 'rgba(153, 102, 255, 0.2)',
+                        tension: 0.1,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'AQI'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Get month name
+        function getMonthName(month) {
+            const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+            return months[month - 1];
+        }
+
+        // Download report
+        function downloadReport() {
+            showNotification('Generating PDF report...', 'info');
+            
+            // Simulate PDF generation
+            setTimeout(() => {
+                // In a real app, you would use jsPDF and html2canvas to generate a PDF
+                // For demo, we'll just show a notification
+                showNotification('PDF report downloaded successfully!', 'success');
+            }, 2000);
+        }
+
+        // Toggle alerts
+        function toggleAlerts() {
+            const alertToggle = document.getElementById('alertToggle');
+            const aqiAlert = document.getElementById('aqiAlert');
+            
+            if (alertToggle.checked) {
+                aqiAlert.style.display = 'block';
+                showNotification('AQI alerts enabled', 'success');
+            } else {
+                aqiAlert.style.display = 'none';
+                showNotification('AQI alerts disabled', 'info');
+            }
+        }
+
+        // Handle login form submission
+        function handleLogin(event) {
+            event.preventDefault();
+            
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+            
+            // Simple validation
+            if (!email || !password) {
+                showNotification('Please fill in all fields', 'warning');
+                return;
+            }
+            
+            // Simulate login
+            showNotification('Login successful! Welcome back.', 'success');
+            
+            // Close modal
+            const loginModal = bootstrap.Modal.getInstance(document.getElementById('loginModal'));
+            loginModal.hide();
+            
+            // Reset form
+            document.getElementById('loginForm').reset();
+        }
+
+        // Handle registration form submission
+        function handleRegistration(event) {
+            event.preventDefault();
+            
+            const name = document.getElementById('registerName').value;
+            const email = document.getElementById('registerEmail').value;
+            const password = document.getElementById('registerPassword').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            const agreeTerms = document.getElementById('agreeTerms').checked;
+            
+            // Simple validation
+            if (!name || !email || !password || !confirmPassword) {
+                showNotification('Please fill in all fields', 'warning');
+                return;
+            }
+            
+            if (password !== confirmPassword) {
+                showNotification('Passwords do not match', 'warning');
+                return;
+            }
+            
+            if (!agreeTerms) {
+                showNotification('You must agree to the terms and conditions', 'warning');
+                return;
+            }
+            
+            // Simulate registration
+            showNotification('Registration successful! Welcome to Airlytics.', 'success');
+            
+            // Close modal
+            const registerModal = bootstrap.Modal.getInstance(document.getElementById('registerModal'));
+            registerModal.hide();
+            
+            // Reset form
+            document.getElementById('registerForm').reset();
+        }
+
+        // Initialize with some sample cities
+        window.addEventListener('load', function() {
+            // Add a few sample cities
+            setTimeout(() => {
+                addCityToTracker('Mumbai', 19.0760, 72.8777);
+                addCityToTracker('Delhi', 28.7041, 77.1025);
+                addCityToTracker('Bangalore', 12.9716, 77.5946);
+            }, 500);
+        });
+    </script>
+</body>
+</html>
