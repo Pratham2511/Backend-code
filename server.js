@@ -1,7 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
-const { sequelize } = require('./models');
+const db = require('./models'); // This will now work correctly
 const authRoutes = require('./routes/authRoutes');
 const pollutionRoutes = require('./routes/pollutionRoutes');
 
@@ -38,14 +38,8 @@ app.use((err, req, res, next) => {
 // Function to initialize database
 const initializeDatabase = async () => {
   try {
-    await sequelize.authenticate();
+    await db.sequelize.authenticate();
     console.log('Database connection established successfully.');
-    
-    // Run migrations
-    const { execSync } = require('child_process');
-    execSync('npx sequelize-cli db:migrate', { stdio: 'inherit' });
-    console.log('Database migrations completed successfully.');
-    
     return true;
   } catch (error) {
     console.error('Unable to connect to the database:', error);
