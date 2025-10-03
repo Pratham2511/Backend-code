@@ -35,14 +35,35 @@ app.use((err, req, res, next) => {
   res.status(500).json({ message: 'Something went wrong!' });
 });
 
-// Start server
-const PORT = process.env.PORT || 10000;
-app.listen(PORT, async () => {
-  console.log(`Server running on port ${PORT}`);
+// Function to initialize database
+const initializeDatabase = async () => {
   try {
     await sequelize.authenticate();
     console.log('Database connection established successfully.');
+    
+    // Run migrations
+    const { execSync } = require('child_process');
+    execSync('npx sequelize-cli db:migrate', { stdio: 'inherit' });
+    console.log('Database migrations completed successfully.');
+    
+    return true;
   } catch (error) {
     console.error('Unable to connect to the database:', error);
+    return false;
+  }
+};
+
+// Start server
+const PORT = process.env.PORT || 10000;
+
+// Initialize database and start server
+initializeDatabase().then(success => {
+  if (success) {
+    app.listen(PORT, () => {
+      console.log(`Server running on port ${PORT}`);
+    });
+  } else {
+    console.log('Failed to initialize database. Server not started.');
+    process.exit(1);
   }
 });
