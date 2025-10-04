@@ -196,14 +196,42 @@
         // Login handling
         async function handleLogin(event) {
             event.preventDefault();
-            // Add your login logic here
-            localStorage.setItem('userType', 'registered');
-            window.location.href = 'index.html';
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+            
+            try {
+                const response = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ email, password })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    // Save user info to localStorage
+                    localStorage.setItem('user', JSON.stringify(data.user));
+                    localStorage.setItem('token', data.token);
+                    localStorage.setItem('userType', 'registered');
+                    
+                    // Redirect to main page
+                    window.location.href = 'index.html';
+                } else {
+                    showNotification(data.message || 'Login failed', 'danger');
+                }
+            } catch (error) {
+                console.error('Login error:', error);
+                showNotification('Network error. Please try again.', 'danger');
+            }
         }
 
         // Registration handling
         async function handleRegistration(event) {
             event.preventDefault();
+            const name = document.getElementById('registerName').value;
+            const email = document.getElementById('registerEmail').value;
             const password = document.getElementById('registerPassword').value;
             const confirmPassword = document.getElementById('confirmPassword').value;
             
@@ -212,9 +240,32 @@
                 return;
             }
             
-            // Add your registration logic here
-            localStorage.setItem('userType', 'registered');
-            window.location.href = 'index.html';
+            try {
+                const response = await fetch('/api/auth/register', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ name, email, password })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    // Save user info to localStorage
+                    localStorage.setItem('user', JSON.stringify(data.user));
+                    localStorage.setItem('token', data.token);
+                    localStorage.setItem('userType', 'registered');
+                    
+                    // Redirect to main page
+                    window.location.href = 'index.html';
+                } else {
+                    showNotification(data.message || 'Registration failed', 'danger');
+                }
+            } catch (error) {
+                console.error('Registration error:', error);
+                showNotification('Network error. Please try again.', 'danger');
+            }
         }
 
         // Guest login handling
@@ -225,6 +276,7 @@
 
         function confirmGuestAccess() {
             localStorage.setItem('userType', 'guest');
+            localStorage.setItem('user', JSON.stringify({ name: 'Guest User' }));
             window.location.href = 'index.html';
         }
 
