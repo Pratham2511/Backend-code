@@ -19,10 +19,13 @@
     padding: 20px;
     height: 100%;
     transition: transform 0.3s ease;
+    backdrop-filter: blur(5px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .feature-card:hover {
     transform: translateY(-5px);
+    background-color: rgba(255, 255, 255, 0.15);
 }
 
 .feature-icon {
@@ -34,7 +37,69 @@
     background-color: white;
     border-radius: 10px;
     padding: 25px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    color: #333;
+}
+
+.login-section .nav-tabs {
+    border-bottom: 1px solid #dee2e6;
+    margin-bottom: 20px;
+}
+
+.login-section .nav-tabs .nav-link {
+    color: #6c757d;
+    border: none;
+    border-bottom: 2px solid transparent;
+    padding: 10px 20px;
+}
+
+.login-section .nav-tabs .nav-link:hover {
+    border-color: transparent;
+    color: #495057;
+}
+
+.login-section .nav-tabs .nav-link.active {
+    color: #0d6efd;
+    background-color: transparent;
+    border-color: #0d6efd;
+    font-weight: 500;
+}
+
+.login-section .form-control {
+    border-radius: 5px;
+    border: 1px solid #ced4da;
+    padding: 10px 15px;
+}
+
+.login-section .form-control:focus {
+    border-color: #86b7fe;
+    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+}
+
+.login-section .btn {
+    border-radius: 5px;
+    padding: 10px 15px;
+    font-weight: 500;
+}
+
+.login-section .btn-primary {
+    background-color: #0d6efd;
+    border-color: #0d6efd;
+}
+
+.login-section .btn-primary:hover {
+    background-color: #0b5ed7;
+    border-color: #0a58ca;
+}
+
+.login-section .btn-outline-secondary {
+    color: #6c757d;
+    border-color: #6c757d;
+}
+
+.login-section .btn-outline-secondary:hover {
+    background-color: #6c757d;
+    color: white;
 }
 
 .modal-warning {
@@ -43,13 +108,28 @@
     border-radius: 5px;
     padding: 10px 15px;
     margin-bottom: 15px;
+    border-left: 4px solid #ffc107;
 }
 
-.nav-tabs .nav-link {
-    color: #6c757d;
+/* Brand styling */
+.brand-name {
+    font-weight: bold;
+    font-size: 1.8rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
 }
 
-.nav-tabs .nav-link.active {
-    color: #495057;
-    font-weight: 500;
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .hero-section {
+        padding: 40px 0;
+    }
+    
+    .feature-card {
+        margin-bottom: 20px;
+    }
+    
+    .login-section {
+        margin-top: 30px;
+    }
 }
