@@ -225,7 +225,10 @@ app.get('/styles/:filename', (req, res) => {
             console.error(`Error serving CSS file ${filename}:`, err);
             res.status(404).send(`CSS file not found: ${filename}`);
         } else {
-            console.log(`Successfully served
+            console.log(`Successfully served CSS file: ${filename}`);
+        }
+    });
+});
 
 // Serve landing.html for root path
 app.get('/', (req, res) => {
