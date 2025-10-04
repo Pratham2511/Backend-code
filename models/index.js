@@ -1,23 +1,22 @@
 const fs = require('fs');
 const path = require('path');
 const Sequelize = require('sequelize');
-const config = require('../config/config');
 
-// Get the current environment (default to development)
-const env = process.env.NODE_ENV || 'development';
-// Get the configuration for the current environment
-const dbConfig = config[env];
-
-// Create Sequelize instance with the correct configuration
+// Use environment variables for database connection
 const sequelize = new Sequelize(
-  dbConfig.database,
-  dbConfig.username,
-  dbConfig.password,
+  process.env.DB_NAME,
+  process.env.DB_USER,
+  process.env.DB_PASSWORD,
   {
-    host: dbConfig.host,
-    dialect: dbConfig.dialect,
-    logging: dbConfig.logging,
-    dialectOptions: dbConfig.dialectOptions || {}
+    host: process.env.DB_HOST,
+    dialect: 'postgres',
+    logging: false,
+    dialectOptions: {
+      ssl: {
+        require: true,
+        rejectUnauthorized: false
+      }
+    }
   }
 );
 
