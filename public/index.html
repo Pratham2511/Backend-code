@@ -17,9 +17,6 @@
     <!-- Animate.css -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
     
-    <!-- Timeout Handler Script -->
-    <!-- <script src="https://cdn.jsdelivr.net/npm/express-timeout-handler@latest/dist/express-timeout-handler.min.js"></script> -->
-    
     <!-- Custom CSS -->
     <style>
         :root {
@@ -186,6 +183,7 @@
             left: 50%;
             transform: translate(-50%, -50%);
             z-index: 1000;
+            display: none; /* Hide by default */
         }
 
         .chart-container {
@@ -1312,6 +1310,264 @@
             window.location.reload();
         }
 
+        // Map functionality
+        let map;
+        let markers = [];
+
+        // Initialize map when the map tab is clicked
+        document.getElementById('map-tab').addEventListener('shown.bs.tab', function () {
+            if (!map) {
+                initializeMap();
+            }
+        });
+
+        function initializeMap() {
+            // Initialize the map
+            map = L.map('map').setView([20.5937, 78.9629], 5); // Center of India
+
+            // Add tile layer
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            }).addTo(map);
+
+            // Add click event to add city markers
+            map.on('click', function(e) {
+                addCityMarker(e.latlng.lat, e.latlng.lng);
+            });
+
+            // Hide loading spinner
+            document.getElementById('mapLoading').style.display = 'none';
+        }
+
+        function addCityMarker(lat, lng) {
+            const marker = L.marker([lat, lng]).addTo(map);
+            markers.push(marker);
+            
+            // Add a popup to the marker
+            marker.bindPopup(`Lat: ${lat.toFixed(4)}, Lng: ${lng.toFixed(4)}`).openPopup();
+        }
+
+        function searchMapLocation() {
+            const location = document.getElementById('mapLocationInput').value;
+            if (location) {
+                showNotification(`Searching for ${location}...`, 'info');
+                
+                // For demo purposes, just add a marker at a fixed location
+                // In a real app, you would use a geocoding service
+                const demoLocations = {
+                    'delhi': [28.7041, 77.1025],
+                    'mumbai': [19.0760, 72.8777],
+                    'bangalore': [12.9716, 77.5946],
+                    'kolkata': [22.5726, 88.3639],
+                    'chennai': [13.0827, 80.2707]
+                };
+                
+                const locationKey = location.toLowerCase();
+                if (demoLocations[locationKey]) {
+                    const [lat, lng] = demoLocations[locationKey];
+                    map.setView([lat, lng], 10);
+                    addCityMarker(lat, lng);
+                    showNotification(`Found ${location}!`, 'success');
+                } else {
+                    showNotification(`Location "${location}" not found. Try Delhi, Mumbai, Bangalore, Kolkata, or Chennai.`, 'warning');
+                }
+            }
+        }
+
+        // Pollution tracker functionality
+        let trackedCities = [];
+
+        function addRandomCity() {
+            const cities = [
+                { name: 'Delhi', aqi: Math.floor(Math.random() * 300) + 50, pm25: Math.floor(Math.random() * 100) + 20, pm10: Math.floor(Math.random() * 150) + 30 },
+                { name: 'Mumbai', aqi: Math.floor(Math.random() * 250) + 40, pm25: Math.floor(Math.random() * 80) + 15, pm10: Math.floor(Math.random() * 120) + 25 },
+                { name: 'Bangalore', aqi: Math.floor(Math.random() * 200) + 30, pm25: Math.floor(Math.random() * 60) + 10, pm10: Math.floor(Math.random() * 100) + 20 },
+                { name: 'Kolkata', aqi: Math.floor(Math.random() * 280) + 45, pm25: Math.floor(Math.random() * 90) + 18, pm10: Math.floor(Math.random() * 130) + 28 },
+                { name: 'Chennai', aqi: Math.floor(Math.random() * 220) + 35, pm25: Math.floor(Math.random() * 70) + 12, pm10: Math.floor(Math.random() * 110) + 22 },
+                { name: 'Hyderabad', aqi: Math.floor(Math.random() * 240) + 38, pm25: Math.floor(Math.random() * 75) + 14, pm10: Math.floor(Math.random() * 115) + 24 },
+                { name: 'Pune', aqi: Math.floor(Math.random() * 210) + 32, pm25: Math.floor(Math.random() * 65) + 11, pm10: Math.floor(Math.random() * 105) + 21 },
+                { name: 'Ahmedabad', aqi: Math.floor(Math.random() * 260) + 42, pm25: Math.floor(Math.random() * 85) + 16, pm10: Math.floor(Math.random() * 125) + 26 }
+            ];
+            
+            // Filter out cities that are already being tracked
+            const availableCities = cities.filter(city => 
+                !trackedCities.some(tracked => tracked.name === city.name)
+            );
+            
+            if (availableCities.length === 0) {
+                showNotification('All cities are already being tracked!', 'warning');
+                return;
+            }
+            
+            const randomCity = availableCities[Math.floor(Math.random() * availableCities.length)];
+            trackedCities.push(randomCity);
+            
+            addCityCard(randomCity);
+            showNotification(`Added ${randomCity.name} to tracker!`, 'success');
+            updateLastUpdatedTime();
+        }
+
+        function addCityCard(city) {
+            const pollutionCards = document.getElementById('pollutionCards');
+            const card = document.createElement('div');
+            card.className = 'card city-card h-100';
+            card.id = `city-${city.name.replace(/\s+/g, '-').toLowerCase()}`;
+            
+            // Determine AQI status and color
+            let aqiStatus, aqiClass;
+            if (city.aqi <= 50) {
+                aqiStatus = 'Good';
+                aqiClass = 'aqi-good';
+            } else if (city.aqi <= 100) {
+                aqiStatus = 'Moderate';
+                aqiClass = 'aqi-moderate';
+            } else if (city.aqi <= 150) {
+                aqiStatus = 'Unhealthy for Sensitive Groups';
+                aqiClass = 'aqi-unhealthy-sensitive';
+            } else if (city.aqi <= 200) {
+                aqiStatus = 'Unhealthy';
+                aqiClass = 'aqi-unhealthy';
+            } else if (city.aqi <= 300) {
+                aqiStatus = 'Very Unhealthy';
+                aqiClass = 'aqi-very-unhealthy';
+            } else {
+                aqiStatus = 'Hazardous';
+                aqiClass = 'aqi-hazardous';
+            }
+            
+            card.innerHTML = `
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="card-title mb-0">${city.name}</h5>
+                        <div class="aqi-badge ${aqiClass} text-white">${city.aqi}</div>
+                    </div>
+                    <p class="card-text"><strong>Status:</strong> ${aqiStatus}</p>
+                    <p class="card-text"><strong>PM2.5:</strong> ${city.pm25} µg/m³</p>
+                    <p class="card-text"><strong>PM10:</strong> ${city.pm10} µg/m³</p>
+                    <div class="d-flex justify-content-between mt-3">
+                        <button class="btn btn-sm btn-outline-primary" onclick="refreshCityData('${city.name}')">
+                            <i class="bi bi-arrow-clockwise me-1"></i> Refresh
+                        </button>
+                        <button class="btn btn-sm btn-outline-danger" onclick="removeCity('${city.name}')">
+                            <i class="bi bi-trash me-1"></i> Remove
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            pollutionCards.appendChild(card);
+        }
+
+        function refreshCityData(cityName) {
+            const cityIndex = trackedCities.findIndex(city => city.name === cityName);
+            if (cityIndex !== -1) {
+                // Simulate data refresh with random values
+                trackedCities[cityIndex] = {
+                    ...trackedCities[cityIndex],
+                    aqi: Math.floor(Math.random() * 300) + 50,
+                    pm25: Math.floor(Math.random() * 100) + 20,
+                    pm10: Math.floor(Math.random() * 150) + 30
+                };
+                
+                // Update the card
+                const cardId = `city-${cityName.replace(/\s+/g, '-').toLowerCase()}`;
+                const card = document.getElementById(cardId);
+                if (card) {
+                    card.remove();
+                    addCityCard(trackedCities[cityIndex]);
+                }
+                
+                showNotification(`Refreshed data for ${cityName}!`, 'success');
+                updateLastUpdatedTime();
+            }
+        }
+
+        function removeCity(cityName) {
+            trackedCities = trackedCities.filter(city => city.name !== cityName);
+            
+            const cardId = `city-${cityName.replace(/\s+/g, '-').toLowerCase()}`;
+            const card = document.getElementById(cardId);
+            if (card) {
+                card.remove();
+            }
+            
+            showNotification(`Removed ${cityName} from tracker!`, 'info');
+        }
+
+        function refreshAllCitiesData() {
+            if (trackedCities.length === 0) {
+                showNotification('No cities to refresh!', 'warning');
+                return;
+            }
+            
+            showNotification('Refreshing all city data...', 'info');
+            
+            // Clear all cards
+            document.getElementById('pollutionCards').innerHTML = '';
+            
+            // Refresh all cities and add new cards
+            const cityNames = trackedCities.map(city => city.name);
+            trackedCities = [];
+            
+            cityNames.forEach(cityName => {
+                // Simulate data refresh with random values
+                const refreshedCity = {
+                    name: cityName,
+                    aqi: Math.floor(Math.random() * 300) + 50,
+                    pm25: Math.floor(Math.random() * 100) + 20,
+                    pm10: Math.floor(Math.random() * 150) + 30
+                };
+                
+                trackedCities.push(refreshedCity);
+                addCityCard(refreshedCity);
+            });
+            
+            showNotification('All city data refreshed!', 'success');
+            updateLastUpdatedTime();
+        }
+
+        function clearAllCities() {
+            if (trackedCities.length === 0) {
+                showNotification('No cities to clear!', 'warning');
+                return;
+            }
+            
+            if (confirm('Are you sure you want to remove all tracked cities?')) {
+                trackedCities = [];
+                document.getElementById('pollutionCards').innerHTML = '';
+                showNotification('All cities removed!', 'warning');
+            }
+        }
+
+        function updateLastUpdatedTime() {
+            const now = new Date();
+            const timeString = now.toLocaleTimeString();
+            document.getElementById('updateTime').textContent = timeString;
+        }
+
+        // Placeholder functions for features
+        function compareCities() {
+            const city1 = document.getElementById('city1Select').value;
+            const city2 = document.getElementById('city2Select').value;
+            if (city1 && city2) {
+                showNotification(`Comparing ${city1} and ${city2}...`, 'info');
+            } else {
+                showNotification('Please select two cities to compare', 'warning');
+            }
+        }
+
+        function showAllCitiesAnalysis() {
+            document.getElementById('analysisCityName').textContent = 'City Analysis';
+            showNotification('Showing all cities analysis', 'info');
+        }
+
+        function downloadReport() {
+            showNotification('Preparing your report...', 'info');
+            setTimeout(() => {
+                showNotification('Report downloaded successfully!', 'success');
+            }, 2000);
+        }
+
         // Initialize app
         document.addEventListener('DOMContentLoaded', () => {
             // Add event listeners for forms
@@ -1344,53 +1600,6 @@
                 });
             }
         });
-
-        // Placeholder functions for features
-        function addRandomCity() {
-            showNotification('Feature coming soon!', 'info');
-        }
-
-        function refreshAllCitiesData() {
-            showNotification('Refreshing data...', 'info');
-            setTimeout(() => {
-                showNotification('Data refreshed successfully!', 'success');
-            }, 1500);
-        }
-
-        function clearAllCities() {
-            if (confirm('Are you sure you want to remove all tracked cities?')) {
-                showNotification('All cities removed!', 'warning');
-            }
-        }
-
-        function searchMapLocation() {
-            const location = document.getElementById('mapLocationInput').value;
-            if (location) {
-                showNotification(`Searching for ${location}...`, 'info');
-            }
-        }
-
-        function compareCities() {
-            const city1 = document.getElementById('city1Select').value;
-            const city2 = document.getElementById('city2Select').value;
-            if (city1 && city2) {
-                showNotification(`Comparing ${city1} and ${city2}...`, 'info');
-            } else {
-                showNotification('Please select two cities to compare', 'warning');
-            }
-        }
-
-        function showAllCitiesAnalysis() {
-            document.getElementById('analysisCityName').textContent = 'City Analysis';
-            showNotification('Showing all cities analysis', 'info');
-        }
-
-        function downloadReport() {
-            showNotification('Preparing your report...', 'info');
-            setTimeout(() => {
-                showNotification('Report downloaded successfully!', 'success');
-            }, 2000);
-        }
     </script>
 </body>
 </html>
