@@ -49,7 +49,6 @@ const sequelize = process.env.DATABASE_URL
 
 // Middleware
 app.use(express.json());
-app.use(express.static(path.join(__dirname, 'public')));
 
 // Models
 const User = sequelize.define('User', {
@@ -240,6 +239,9 @@ app.post('/api/auth/login', async (req, res) => {
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'landing.html'));
 });
+
+// Static file middleware
+app.use(express.static(path.join(__dirname, 'public')));
 
 // Serve index.html for all other routes
 app.get('*', (req, res) => {
