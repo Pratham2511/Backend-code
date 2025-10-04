@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
+const compression = require('compression'); // This should be at line 14
 const { Sequelize } = require('sequelize');
 const authRoutes = require('./routes/authRoutes');
 const pollutionRoutes = require('./routes/pollutionRoutes');
@@ -10,33 +11,14 @@ const app = express();
 // Trust proxy settings for Render
 app.set('trust proxy', true);
 
-// Import compression
-const compression = require('compression');
-
 // Middleware
+app.use(compression()); // Use compression middleware
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(compression()); // Add compression
 
-// Serve static files with cache control
-app.use(express.static(path.join(__dirname, 'public'), {
-  maxAge: '1h',
-  setHeaders: (res, path) => {
-    if (path.endsWith('.html')) {
-      // Don't cache HTML files
-      res.setHeader('Cache-Control', 'no-cache');
-    } else {
-      // Cache other static files
-      res.setHeader('Cache-Control', 'public, max-age=3600');
-    }
-  }
-}));
-
-// Special route for root - serve landing page
-app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'landing.html'));
-});
+// Serve static files from the React app
+app.use(express.static(path.join(__dirname, 'public')));
 
 // API routes
 app.use('/api/auth', authRoutes);
@@ -66,33 +48,15 @@ app.get('/health', async (req, res) => {
   }
 });
 
-// Catch-all handler
+// Catch-all handler to serve the React app
 app.get('*', (req, res) => {
-  if (req.path.startsWith('/api')) {
-    res.status(404).json({ message: 'API endpoint not found' });
-  } else {
-    // For non-API routes, check if the user is logged in
-    const authHeader = req.headers.authorization;
-    if (!authHeader && !req.path.includes('landing.html')) {
-      res.redirect('/');
-    } else {
-      res.sendFile(path.join(__dirname, 'public', 'index.html'));
-    }
-  }
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
 // Error handling middleware
 app.use((err, req, res, next) => {
-  const errorDetails = {
-    message: err.message,
-    stack: process.env.NODE_ENV === 'production' ? '🥞' : err.stack,
-    timestamp: new Date().toISOString(),
-    path: req.path,
-    method: req.method
-  };
-  
-  console.error(JSON.stringify(errorDetails));
-  res.status(500).json({ message: 'Something went wrong!', id: errorDetails.timestamp });
+  console.error(err.stack);
+  res.status(500).json({ message: 'Something went wrong!' });
 });
 
 // Function to create database if it doesn't exist
