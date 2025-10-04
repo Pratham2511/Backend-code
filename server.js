@@ -2,7 +2,6 @@ const express = require('express');
 const cors = require('cors');
 const path = require('path');
 const { Sequelize } = require('sequelize');
-const timeout = require('express-timeout-handler'); // Add this line
 const authRoutes = require('./routes/authRoutes');
 const pollutionRoutes = require('./routes/pollutionRoutes');
 
@@ -15,18 +14,6 @@ app.set('trust proxy', true);
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-
-// Add timeout handler after other middleware
-const timeoutHandler = timeout.handler({
-  timeout: 15000, // 15 seconds
-  onTimeout: (req, res) => {
-    res.status(503).json({
-      message: 'Request timeout',
-      code: 'REQUEST_TIMEOUT'
-    });
-  }
-});
-app.use(timeoutHandler);
 
 // Serve static files from the React app
 app.use(express.static(path.join(__dirname, 'public')));
