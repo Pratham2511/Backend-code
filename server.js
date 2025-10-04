@@ -3,6 +3,7 @@ const express = require('express');
 const path = require('path');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
+const fs = require('fs');
 const app = express();
 
 // Database configuration
@@ -50,9 +51,67 @@ const sequelize = process.env.DATABASE_URL
 // Middleware
 app.use(express.json());
 
-// Basic health check endpoint
+// Debug route to check file existence
+app.get('/debug-files', (req, res) => {
+    const files = [
+        'public/landing.html',
+        'public/styles/common.css',
+        'public/styles/landing.css'
+    ];
+    
+    const results = files.map(file => {
+        const filePath = path.join(__dirname, file);
+        const exists = fs.existsSync(filePath);
+        return { file, exists, fullPath: filePath };
+    });
+    
+    res.json(results);
+});
+
+// Test route for CSS
+app.get('/test-css', (req, res) => {
+  res.send(`
+    <html>
+      <head>
+        <title>CSS Test</title>
+        <link rel="stylesheet" href="/styles/landing.css">
+      </head>
+      <body>
+        <h1>If this page has a gradient background, CSS is working!</h1>
+      </body>
+    </html>
+  `);
+});
+
+// Health check
 app.get('/health', (req, res) => {
   res.status(200).json({ status: 'OK', message: 'Service is healthy' });
+});
+
+// Enhanced static file handling
+app.use(express.static(path.join(__dirname, 'public'), {
+    setHeaders: (res, filePath) => {
+        // Set proper MIME types
+        if (filePath.endsWith('.css')) {
+            res.setHeader('Content-Type', 'text/css');
+        } else if (filePath.endsWith('.js')) {
+            res.setHeader('Content-Type', 'application/javascript');
+        }
+    },
+    fallthrough: false // Don't continue to next middleware if file not found
+}));
+
+// Handle CSS files specifically
+app.get('/styles/:filename', (req, res) => {
+    const filename = req.params.filename;
+    const filePath = path.join(__dirname, 'public', 'styles', filename);
+    
+    res.sendFile(filePath, (err) => {
+        if (err) {
+            console.error(`Error serving CSS file ${filename}:`, err);
+            res.status(404).send('CSS file not found');
+        }
+    });
 });
 
 // Models
@@ -141,10 +200,8 @@ app.get('/api/cities', async (req, res) => {
 
 app.post('/api/refresh-data', async (req, res) => {
   try {
-    // Get all cities
     const cities = await City.findAll();
     
-    // Update pollution data with random values for demo
     for (const city of cities) {
       await city.update({
         aqi: Math.floor(Math.random() * 300) + 50,
@@ -168,24 +225,20 @@ app.post('/api/auth/register', async (req, res) => {
   try {
     const { name, email, password } = req.body;
     
-    // Check if user already exists
     const existingUser = await User.findOne({ where: { email } });
     if (existingUser) {
       return res.status(400).json({ message: 'User already exists' });
     }
     
-    // Hash password
     const saltRounds = 12;
     const hashedPassword = await bcrypt.hash(password, saltRounds);
     
-    // Create user
     const user = await User.create({
       name,
       email,
       password: hashedPassword
     });
     
-    // Generate JWT token
     const token = jwt.sign(
       { id: user.id, name: user.name, email: user.email },
       JWT_SECRET,
@@ -211,19 +264,16 @@ app.post('/api/auth/login', async (req, res) => {
   try {
     const { email, password } = req.body;
     
-    // Find user
     const user = await User.findOne({ where: { email } });
     if (!user) {
       return res.status(400).json({ message: 'Invalid credentials' });
     }
     
-    // Check password
     const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid) {
       return res.status(400).json({ message: 'Invalid credentials' });
     }
     
-    // Generate JWT token
     const token = jwt.sign(
       { id: user.id, name: user.name, email: user.email },
       JWT_SECRET,
@@ -250,9 +300,6 @@ app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'landing.html'));
 });
 
-// Static file middleware
-app.use(express.static(path.join(__dirname, 'public')));
-
 // Serve index.html for all other routes
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
@@ -267,26 +314,20 @@ app.use((err, req, res, next) => {
 // Start server
 async function startServer() {
   try {
-    // Test database connection
     await sequelize.authenticate();
     console.log('✅ Database connection established successfully.');
     
-    // Sync database
     await sequelize.sync({ force: false });
     console.log('✅ Database synchronized.');
     
-    // Start server
     const PORT = process.env.PORT || 10000;
     const server = app.listen(PORT, '0.0.0.0', () => {
       console.log(`🚀 Server running on port ${PORT}`);
-      console.log(`🌐 Environment: ${process.env.NODE_ENV || 'development'}`);
     });
     
-    // Set timeouts to prevent 502 errors
-    server.keepAliveTimeout = 120000; // 120 seconds
-    server.headersTimeout = 120000; // 120 seconds
+    server.keepAliveTimeout = 120000;
+    server.headersTimeout = 120000;
     
-    // Handle graceful shutdown
     process.on('SIGTERM', () => {
       console.log('SIGTERM received, shutting down gracefully');
       server.close(() => {
@@ -298,18 +339,6 @@ async function startServer() {
       });
     });
     
-    // Handle uncaught exceptions
-    process.on('uncaughtException', (error) => {
-      console.error('Uncaught Exception:', error);
-      // Don't restart the process here, let Render handle it
-    });
-    
-    // Handle unhandled promise rejections
-    process.on('unhandledRejection', (reason, promise) => {
-      console.error('Unhandled Rejection at:', promise, 'reason:', reason);
-      // Don't restart the process here, let Render handle it
-    });
-    
   } catch (error) {
     console.error('❌ Failed to start server:', error.message);
     console.log('🔄 Retrying in 5 seconds...');
@@ -317,7 +346,6 @@ async function startServer() {
   }
 }
 
-// Start the server
 startServer().catch(error => {
   console.error('Failed to start server:', error);
   process.exit(1);
