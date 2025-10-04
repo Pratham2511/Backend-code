@@ -280,12 +280,15 @@
             window.location.href = 'index.html';
         }
 
-        // Check if user is already logged in
-        document.addEventListener('DOMContentLoaded', () => {
-            const userType = localStorage.getItem('userType');
-            if (userType) {
-                window.location.href = 'index.html';
-            }
+       
+    // Check if user is authenticated
+    const userType = localStorage.getItem('userType');
+    const token = localStorage.getItem('token');
+
+    // If there's no userType, redirect to landing page
+    if (!userType) {
+        window.location.href = '/landing.html';
+    }
         });
     </script>
 </body>
