@@ -24,6 +24,11 @@ exports.getPollutionReadings = async (req, res) => {
     const { page = 1, limit = 10, city, startDate, endDate } = req.query;
     const offset = (page - 1) * limit;
     
+    // For guest users, limit the data access
+    if (req.user.isGuest) {
+      limit = Math.min(limit, 5); // Restrict to max 5 items per page for guests
+    }
+    
     const where = {};
     if (city) where.city = city;
     if (startDate && endDate) {
@@ -46,13 +51,31 @@ exports.getPollutionReadings = async (req, res) => {
       ]
     });
     
-    res.json({
+    // For guest users, limit the response data
+    let responseData = {
       pollutionReadings: rows,
       totalPages: Math.ceil(count / limit),
       currentPage: parseInt(page),
       totalItems: count
-    });
+    };
+
+    if (req.user.isGuest) {
+      // Simplify data for guest users
+      responseData.pollutionReadings = rows.map(reading => ({
+        id: reading.id,
+        city: reading.city,
+        aqi: reading.aqi,
+        recordedAt: reading.recordedAt,
+        pollutants: {
+          pm25: reading.pm25,
+          pm10: reading.pm10
+        }
+      }));
+    }
+    
+    res.json(responseData);
   } catch (error) {
+    console.error('Error fetching pollution readings:', error);
     res.status(500).json({ message: 'Server error fetching pollution readings' });
   }
 };
@@ -142,14 +165,29 @@ exports.getLatestPollutionByCity = async (req, res) => {
       return res.status(400).json({ message: 'City parameter is required' });
     }
     
-    const latestReading = await pollutionService.getLatestByCity(city);
+    let latestReading = await pollutionService.getLatestByCity(city);
     
     if (!latestReading) {
       return res.status(404).json({ message: 'No pollution data found for this city' });
     }
     
+    // For guest users, limit the response data
+    if (req.user.isGuest) {
+      latestReading = {
+        id: latestReading.id,
+        city: latestReading.city,
+        aqi: latestReading.aqi,
+        recordedAt: latestReading.recordedAt,
+        pollutants: {
+          pm25: latestReading.pm25,
+          pm10: latestReading.pm10
+        }
+      };
+    }
+    
     res.json({ latestReading });
   } catch (error) {
+    console.error('Error fetching latest pollution data:', error);
     res.status(500).json({ message: 'Server error fetching latest pollution data' });
   }
 };

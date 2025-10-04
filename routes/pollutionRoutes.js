@@ -2,14 +2,15 @@ const express = require('express');
 const router = express.Router();
 const pollutionController = require('../controllers/pollutionController');
 const { auth, adminAuth } = require('../middleware/auth');
+const guestAuth = require('../middleware/guestAuth');
 const { validatePollutionReading } = require('../middleware/validation');
 const { generalLimiter } = require('../middleware/rateLimiter');
 
 // Get all pollution readings (with optional filtering and pagination)
-router.get('/', generalLimiter, pollutionController.getPollutionReadings);
+router.get('/', generalLimiter, guestAuth, pollutionController.getPollutionReadings);
 
 // Get latest pollution reading by city (public endpoint)
-router.get('/latest', generalLimiter, pollutionController.getLatestPollutionByCity);
+router.get('/latest', generalLimiter, guestAuth, pollutionController.getLatestPollutionByCity);
 
 // Get pollution reading by ID
 router.get('/:id', auth, pollutionController.getPollutionReadingById);

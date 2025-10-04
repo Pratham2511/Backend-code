@@ -15,8 +15,13 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Serve static files from the React app
+// Serve static files
 app.use(express.static(path.join(__dirname, 'public')));
+
+// Special route for root - serve landing page
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'landing.html'));
+});
 
 // API routes
 app.use('/api/auth', authRoutes);
@@ -46,9 +51,19 @@ app.get('/health', async (req, res) => {
   }
 });
 
-// Catch-all handler to serve the React app
+// Catch-all handler
 app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+  if (req.path.startsWith('/api')) {
+    res.status(404).json({ message: 'API endpoint not found' });
+  } else {
+    // For non-API routes, check if the user is logged in
+    const authHeader = req.headers.authorization;
+    if (!authHeader && !req.path.includes('landing.html')) {
+      res.redirect('/');
+    } else {
+      res.sendFile(path.join(__dirname, 'public', 'index.html'));
+    }
+  }
 });
 
 // Error handling middleware

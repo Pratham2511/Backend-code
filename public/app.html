@@ -80,7 +80,7 @@
                 <div class="col-md-3 col-6 mb-3">
                     <div class="stat-box animate__animated animate__fadeInUp animate__delay-1s">
                         <i class="bi bi-geo-alt-fill text-primary"></i>
-                        <h3>10+</h3>
+                        <h3 id="cityCount">--</h3>
                         <p>Major Cities</p>
                     </div>
                 </div>
@@ -1189,27 +1189,52 @@
             pollutionCards.appendChild(card);
         }
 
-        function refreshCityData(cityName) {
+        // Global refresh state
+        let isRefreshing = false;
+        let lastRefreshTime = null;
+        
+        async function refreshCityData(cityName) {
+            if (isRefreshing) {
+                showNotification('Data refresh already in progress...', 'info');
+                return;
+            }
+            
             const cityIndex = trackedCities.findIndex(city => city.name === cityName);
             if (cityIndex !== -1) {
-                // Simulate data refresh with random values
-                trackedCities[cityIndex] = {
-                    ...trackedCities[cityIndex],
-                    aqi: Math.floor(Math.random() * 300) + 50,
-                    pm25: Math.floor(Math.random() * 100) + 20,
-                    pm10: Math.floor(Math.random() * 150) + 30
-                };
-                
-                // Update the card
-                const cardId = `city-${cityName.replace(/\s+/g, '-').toLowerCase()}`;
-                const card = document.getElementById(cardId);
-                if (card) {
-                    card.remove();
-                    addCityCard(trackedCities[cityIndex]);
+                try {
+                    isRefreshing = true;
+                    showNotification(`Refreshing data for ${cityName}...`, 'info');
+                    
+                    // Get fresh data from API
+                    const response = await fetch(`/api/pollution/latest?city=${encodeURIComponent(cityName)}`, {
+                        headers: getRequestHeaders()
+                    });
+                    
+                    if (!response.ok) throw new Error('Failed to fetch updated data');
+                    
+                    const data = await response.json();
+                    trackedCities[cityIndex] = {
+                        ...trackedCities[cityIndex],
+                        ...data.latestReading
+                    };
+                    
+                    // Update the card
+                    const cardId = `city-${cityName.replace(/\s+/g, '-').toLowerCase()}`;
+                    const card = document.getElementById(cardId);
+                    if (card) {
+                        card.remove();
+                        addCityCard(trackedCities[cityIndex]);
+                    }
+                    
+                    showNotification(`Refreshed data for ${cityName}!`, 'success');
+                    lastRefreshTime = new Date();
+                    updateLastUpdatedTime();
+                } catch (error) {
+                    console.error('Error refreshing data:', error);
+                    showNotification(`Failed to refresh data for ${cityName}`, 'error');
+                } finally {
+                    isRefreshing = false;
                 }
-                
-                showNotification(`Refreshed data for ${cityName}!`, 'success');
-                updateLastUpdatedTime();
             }
         }
 
@@ -1225,36 +1250,65 @@
             showNotification(`Removed ${cityName} from tracker!`, 'info');
         }
 
-        function refreshAllCitiesData() {
+        async function refreshAllCitiesData() {
             if (trackedCities.length === 0) {
                 showNotification('No cities to refresh!', 'warning');
                 return;
             }
             
-            showNotification('Refreshing all city data...', 'info');
+            if (isRefreshing) {
+                showNotification('Data refresh already in progress...', 'info');
+                return;
+            }
             
-            // Clear all cards
-            document.getElementById('pollutionCards').innerHTML = '';
-            
-            // Refresh all cities and add new cards
-            const cityNames = trackedCities.map(city => city.name);
-            trackedCities = [];
-            
-            cityNames.forEach(cityName => {
-                // Simulate data refresh with random values
-                const refreshedCity = {
-                    name: cityName,
-                    aqi: Math.floor(Math.random() * 300) + 50,
-                    pm25: Math.floor(Math.random() * 100) + 20,
-                    pm10: Math.floor(Math.random() * 150) + 30
-                };
+            try {
+                isRefreshing = true;
+                showNotification('Refreshing all city data...', 'info');
                 
-                trackedCities.push(refreshedCity);
-                addCityCard(refreshedCity);
-            });
-            
-            showNotification('All city data refreshed!', 'success');
-            updateLastUpdatedTime();
+                // Clear all cards
+                document.getElementById('pollutionCards').innerHTML = '';
+                
+                // Refresh all cities and add new cards
+                const cityNames = trackedCities.map(city => city.name);
+                const refreshPromises = cityNames.map(async (cityName) => {
+                    try {
+                        const response = await fetch(`/api/pollution/latest?city=${encodeURIComponent(cityName)}`, {
+                            headers: getRequestHeaders()
+                        });
+                        
+                        if (!response.ok) throw new Error(`Failed to fetch data for ${cityName}`);
+                        
+                        const data = await response.json();
+                        return {
+                            name: cityName,
+                            ...data.latestReading
+                        };
+                    } catch (error) {
+                        console.error(`Error refreshing ${cityName}:`, error);
+                        return null;
+                    }
+                });
+                
+                const refreshedCities = await Promise.all(refreshPromises);
+                trackedCities = refreshedCities.filter(city => city !== null);
+                
+                // Add cards for successfully refreshed cities
+                trackedCities.forEach(city => addCityCard(city));
+                
+                lastRefreshTime = new Date();
+                updateLastUpdatedTime();
+                showNotification('All city data refreshed!', 'success');
+                
+                // Update analysis if on analysis tab
+                if (document.getElementById('analysis').classList.contains('active')) {
+                    updateAnalysisData();
+                }
+            } catch (error) {
+                console.error('Error refreshing all cities:', error);
+                showNotification('Failed to refresh some city data', 'error');
+            } finally {
+                isRefreshing = false;
+            }
         }
 
         function clearAllCities() {
@@ -1287,68 +1341,132 @@
             }
         }
 
-        function viewCityAnalysis(cityName) {
-            const city = window.cities.find(c => c.name === cityName);
-            if (!city) return;
-
-            // Switch to analysis tab
-            document.getElementById('analysis-tab').click();
-            
-            // Update city name in analysis view
-            document.getElementById('analysisCityName').textContent = `${cityName} Analysis`;
-            
-            // Show single city analysis view, hide all cities view
-            document.getElementById('singleCityPollutants').style.display = 'block';
-            document.getElementById('allCitiesPollutants').style.display = 'none';
-            
-            // Update health impact card
-            updateHealthImpact(city.aqi);
-            
-            // Update weather data
-            document.getElementById('temperature').textContent = `${Math.round(20 + Math.random() * 15)}°C`;
-            document.getElementById('humidity').textContent = `${Math.round(40 + Math.random() * 40)}%`;
-            document.getElementById('windSpeed').textContent = `${Math.round(5 + Math.random() * 20)} km/h`;
-            
-            // Update pollutant chart
-            const ctx = document.getElementById('cityPollutantChart').getContext('2d');
-            new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: ['PM2.5', 'PM10', 'NO2', 'SO2', 'CO', 'O3'],
-                    datasets: [{
-                        label: 'Concentration',
-                        data: [city.pm25, city.pm10, city.no2, city.so2, city.co, city.o3],
-                        backgroundColor: [
-                            'rgba(255, 99, 132, 0.5)',
-                            'rgba(54, 162, 235, 0.5)',
-                            'rgba(255, 206, 86, 0.5)',
-                            'rgba(75, 192, 192, 0.5)',
-                            'rgba(153, 102, 255, 0.5)',
-                            'rgba(255, 159, 64, 0.5)'
-                        ],
-                        borderColor: [
-                            'rgba(255, 99, 132, 1)',
-                            'rgba(54, 162, 235, 1)',
-                            'rgba(255, 206, 86, 1)',
-                            'rgba(75, 192, 192, 1)',
-                            'rgba(153, 102, 255, 1)',
-                            'rgba(255, 159, 64, 1)'
-                        ],
-                        borderWidth: 1
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    scales: {
-                        y: {
-                            beginAtZero: true
+        // Store active charts for cleanup
+        let activeCharts = {};
+        
+        async function viewCityAnalysis(cityName) {
+            try {
+                // Switch to analysis tab
+                document.getElementById('analysis-tab').click();
+                
+                // Show loading state
+                showNotification(`Loading analysis for ${cityName}...`, 'info');
+                
+                // Get fresh data for the city
+                const response = await fetch(`/api/pollution/latest?city=${encodeURIComponent(cityName)}`, {
+                    headers: getRequestHeaders()
+                });
+                
+                if (!response.ok) throw new Error('Failed to fetch city data');
+                
+                const { latestReading: city } = await response.json();
+                
+                // Update city name in analysis view
+                document.getElementById('analysisCityName').textContent = `${cityName} Analysis`;
+                
+                // Show single city analysis view, hide all cities view
+                document.getElementById('singleCityPollutants').style.display = 'block';
+                document.getElementById('allCitiesPollutants').style.display = 'none';
+                
+                // Update health impact card
+                updateHealthImpact(city.aqi);
+                
+                // Get weather data for the city
+                try {
+                    const weatherResponse = await fetch(`/api/weather?city=${encodeURIComponent(cityName)}`, {
+                        headers: getRequestHeaders()
+                    });
+                    
+                    if (weatherResponse.ok) {
+                        const weatherData = await weatherResponse.json();
+                        document.getElementById('temperature').textContent = `${weatherData.temperature}°C`;
+                        document.getElementById('humidity').textContent = `${weatherData.humidity}%`;
+                        document.getElementById('windSpeed').textContent = `${weatherData.windSpeed} km/h`;
+                    }
+                } catch (error) {
+                    console.error('Error fetching weather data:', error);
+                    // Use placeholder data if weather fetch fails
+                    document.getElementById('temperature').textContent = `${Math.round(20 + Math.random() * 15)}°C`;
+                    document.getElementById('humidity').textContent = `${Math.round(40 + Math.random() * 40)}%`;
+                    document.getElementById('windSpeed').textContent = `${Math.round(5 + Math.random() * 20)} km/h`;
+                }
+                
+                // Cleanup old chart if exists
+                if (activeCharts.pollutant) {
+                    activeCharts.pollutant.destroy();
+                }
+                
+                // Update pollutant chart
+                const ctx = document.getElementById('cityPollutantChart').getContext('2d');
+                activeCharts.pollutant = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: ['PM2.5', 'PM10', 'NO2', 'SO2', 'CO', 'O3'],
+                        datasets: [{
+                            label: 'Concentration',
+                            data: [city.pm25, city.pm10, city.no2, city.so2, city.co, city.o3],
+                            backgroundColor: [
+                                'rgba(255, 99, 132, 0.5)',
+                                'rgba(54, 162, 235, 0.5)',
+                                'rgba(255, 206, 86, 0.5)',
+                                'rgba(75, 192, 192, 0.5)',
+                                'rgba(153, 102, 255, 0.5)',
+                                'rgba(255, 159, 64, 0.5)'
+                            ],
+                            borderColor: [
+                                'rgba(255, 99, 132, 1)',
+                                'rgba(54, 162, 235, 1)',
+                                'rgba(255, 206, 86, 1)',
+                                'rgba(75, 192, 192, 1)',
+                                'rgba(153, 102, 255, 1)',
+                                'rgba(255, 159, 64, 1)'
+                            ],
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        scales: {
+                            y: {
+                                beginAtZero: true
+                            }
                         }
                     }
-                }
-            });
-            
-            showNotification(`Showing analysis for ${cityName}`, 'info');
+                });
+                
+                // Start auto-update for analysis
+                startAnalysisAutoUpdate(cityName);
+                
+                showNotification(`Analysis loaded for ${cityName}`, 'success');
+            } catch (error) {
+                console.error('Error loading city analysis:', error);
+                showNotification(`Failed to load analysis for ${cityName}`, 'error');
+            }
         }
+        
+        // Auto-update for analysis
+        let analysisUpdateInterval;
+        
+        function startAnalysisAutoUpdate(cityName) {
+            // Clear any existing interval
+            if (analysisUpdateInterval) {
+                clearInterval(analysisUpdateInterval);
+            }
+            
+            // Update every 5 minutes
+            analysisUpdateInterval = setInterval(() => {
+                if (document.getElementById('analysis').classList.contains('active')) {
+                    viewCityAnalysis(cityName);
+                }
+            }, 300000); // 5 minutes
+        }
+        
+        // Cleanup on tab change
+        document.getElementById('mainTabs').addEventListener('shown.bs.tab', function (e) {
+            if (e.target.id !== 'analysis-tab' && analysisUpdateInterval) {
+                clearInterval(analysisUpdateInterval);
+            }
+        });
 
         function updateHealthImpact(aqi) {
             const healthCard = document.getElementById('healthImpactCard');
@@ -1396,8 +1514,19 @@
             }, 2000);
         }
 
+        // Update city count
+        function updateCityCount() {
+            const cityCountElement = document.getElementById('cityCount');
+            if (cityCountElement && window.cities) {
+                cityCountElement.textContent = `${window.cities.length}+`;
+            }
+        }
+
         // Initialize app
         document.addEventListener('DOMContentLoaded', () => {
+            // Update city count
+            updateCityCount();
+            
             // Add event listeners for forms
             const loginForm = document.querySelector('#loginForm');
             if (loginForm) {
