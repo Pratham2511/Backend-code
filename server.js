@@ -50,6 +50,11 @@ const sequelize = process.env.DATABASE_URL
 // Middleware
 app.use(express.json());
 
+// Basic health check endpoint
+app.get('/health', (req, res) => {
+  res.status(200).json({ status: 'OK', message: 'Service is healthy' });
+});
+
 // Models
 const User = sequelize.define('User', {
   name: {
@@ -119,6 +124,7 @@ app.get('/api/cities/count', async (req, res) => {
     const count = await City.count();
     res.json({ count });
   } catch (error) {
+    console.error('Error getting city count:', error);
     res.status(500).json({ message: error.message });
   }
 });
@@ -128,6 +134,7 @@ app.get('/api/cities', async (req, res) => {
     const cities = await City.findAll();
     res.json(cities);
   } catch (error) {
+    console.error('Error getting cities:', error);
     res.status(500).json({ message: error.message });
   }
 });
@@ -152,6 +159,7 @@ app.post('/api/refresh-data', async (req, res) => {
     
     res.json({ message: 'Data refreshed successfully' });
   } catch (error) {
+    console.error('Error refreshing data:', error);
     res.status(500).json({ message: error.message });
   }
 });
@@ -194,6 +202,7 @@ app.post('/api/auth/register', async (req, res) => {
       }
     });
   } catch (error) {
+    console.error('Registration error:', error);
     res.status(500).json({ message: error.message });
   }
 });
@@ -231,6 +240,7 @@ app.post('/api/auth/login', async (req, res) => {
       }
     });
   } catch (error) {
+    console.error('Login error:', error);
     res.status(500).json({ message: error.message });
   }
 });
@@ -250,21 +260,26 @@ app.get('*', (req, res) => {
 
 // Error handling middleware
 app.use((err, req, res, next) => {
-  console.error(err.stack);
+  console.error('Server error:', err);
   res.status(500).send('Something broke!');
 });
 
 // Start server
 async function startServer() {
   try {
+    // Test database connection
+    await sequelize.authenticate();
+    console.log('✅ Database connection established successfully.');
+    
     // Sync database
     await sequelize.sync({ force: false });
     console.log('✅ Database synchronized.');
     
     // Start server
-    const PORT = process.env.PORT || 10000; // Use 10000 as default for Render
+    const PORT = process.env.PORT || 10000;
     const server = app.listen(PORT, '0.0.0.0', () => {
       console.log(`🚀 Server running on port ${PORT}`);
+      console.log(`🌐 Environment: ${process.env.NODE_ENV || 'development'}`);
     });
     
     // Set timeouts to prevent 502 errors
@@ -283,6 +298,18 @@ async function startServer() {
       });
     });
     
+    // Handle uncaught exceptions
+    process.on('uncaughtException', (error) => {
+      console.error('Uncaught Exception:', error);
+      // Don't restart the process here, let Render handle it
+    });
+    
+    // Handle unhandled promise rejections
+    process.on('unhandledRejection', (reason, promise) => {
+      console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+      // Don't restart the process here, let Render handle it
+    });
+    
   } catch (error) {
     console.error('❌ Failed to start server:', error.message);
     console.log('🔄 Retrying in 5 seconds...');
@@ -290,4 +317,8 @@ async function startServer() {
   }
 }
 
-startServer();
+// Start the server
+startServer().catch(error => {
+  console.error('Failed to start server:', error);
+  process.exit(1);
+});
