@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const path = require('path');
 const { Sequelize } = require('sequelize');
+const timeout = require('express-timeout-handler'); // Add this line
 const authRoutes = require('./routes/authRoutes');
 const pollutionRoutes = require('./routes/pollutionRoutes');
 
@@ -15,6 +16,18 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// Add timeout handler after other middleware
+const timeoutHandler = timeout.handler({
+  timeout: 15000, // 15 seconds
+  onTimeout: (req, res) => {
+    res.status(503).json({
+      message: 'Request timeout',
+      code: 'REQUEST_TIMEOUT'
+    });
+  }
+});
+app.use(timeoutHandler);
+
 // Serve static files from the React app
 app.use(express.static(path.join(__dirname, 'public')));
 
@@ -22,9 +35,28 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use('/api/auth', authRoutes);
 app.use('/api/pollution', pollutionRoutes);
 
-// Health check
-app.get('/health', (req, res) => {
-  res.status(200).json({ status: 'OK', message: 'Air Pollution Tracker API is running' });
+// Add keep-alive endpoint after API routes but before health check
+app.get('/keep-alive', (req, res) => {
+  res.status(200).json({ status: 'OK', message: 'Service is awake' });
+});
+
+// Updated health check with database connection
+app.get('/health', async (req, res) => {
+  try {
+    const db = require('./models');
+    await db.sequelize.authenticate();
+    res.status(200).json({ 
+      status: 'OK', 
+      message: 'Air Pollution Tracker API is running',
+      database: 'Connected'
+    });
+  } catch (error) {
+    res.status(503).json({ 
+      status: 'ERROR', 
+      message: 'Database connection failed',
+      error: error.message
+    });
+  }
 });
 
 // Catch-all handler to serve the React app
@@ -116,8 +148,28 @@ const PORT = process.env.PORT || 10000;
 // Initialize database and start server
 initializeDatabase().then(success => {
   if (success) {
-    app.listen(PORT, () => {
+    const server = app.listen(PORT, () => {
       console.log(`Server running on port ${PORT}`);
+    });
+    
+    // Add process monitoring at the end
+    // Handle unhandled promise rejections
+    process.on('unhandledRejection', (reason, promise) => {
+      console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+    });
+
+    // Handle uncaught exceptions
+    process.on('uncaughtException', (error) => {
+      console.error('Uncaught Exception:', error);
+      process.exit(1);
+    });
+
+    // Graceful shutdown
+    process.on('SIGTERM', () => {
+      console.info('SIGTERM signal received: closing HTTP server');
+      server.close(() => {
+        console.log('HTTP server closed');
+      });
     });
   } else {
     console.log('Failed to initialize database. Server not started.');
