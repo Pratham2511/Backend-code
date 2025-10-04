@@ -2,7 +2,7 @@ services:
   - type: web
     name: air-pollution-tracker-backend
     env: node
-    buildCommand: "npm ci && npm run build"
+    buildCommand: "touch .rebuild-trigger && npm ci && npm run build"
     startCommand: "npm start"
     envVars:
       - key: NODE_ENV

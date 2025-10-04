@@ -10,13 +10,28 @@ const app = express();
 // Trust proxy settings for Render
 app.set('trust proxy', true);
 
+// Import compression
+const compression = require('compression');
+
 // Middleware
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(compression()); // Add compression
 
-// Serve static files
-app.use(express.static(path.join(__dirname, 'public')));
+// Serve static files with cache control
+app.use(express.static(path.join(__dirname, 'public'), {
+  maxAge: '1h',
+  setHeaders: (res, path) => {
+    if (path.endsWith('.html')) {
+      // Don't cache HTML files
+      res.setHeader('Cache-Control', 'no-cache');
+    } else {
+      // Cache other static files
+      res.setHeader('Cache-Control', 'public, max-age=3600');
+    }
+  }
+}));
 
 // Special route for root - serve landing page
 app.get('/', (req, res) => {
@@ -68,8 +83,16 @@ app.get('*', (req, res) => {
 
 // Error handling middleware
 app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).json({ message: 'Something went wrong!' });
+  const errorDetails = {
+    message: err.message,
+    stack: process.env.NODE_ENV === 'production' ? '🥞' : err.stack,
+    timestamp: new Date().toISOString(),
+    path: req.path,
+    method: req.method
+  };
+  
+  console.error(JSON.stringify(errorDetails));
+  res.status(500).json({ message: 'Something went wrong!', id: errorDetails.timestamp });
 });
 
 // Function to create database if it doesn't exist
