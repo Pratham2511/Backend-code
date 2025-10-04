@@ -55,6 +55,7 @@ app.use(express.json());
 app.get('/debug-files', (req, res) => {
     const files = [
         'public/landing.html',
+        'public/index.html',
         'public/styles/common.css',
         'public/styles/landing.css'
     ];
@@ -88,96 +89,7 @@ app.get('/health', (req, res) => {
   res.status(200).json({ status: 'OK', message: 'Service is healthy' });
 });
 
-// Enhanced static file handling
-app.use(express.static(path.join(__dirname, 'public'), {
-    setHeaders: (res, filePath) => {
-        // Set proper MIME types
-        if (filePath.endsWith('.css')) {
-            res.setHeader('Content-Type', 'text/css');
-        } else if (filePath.endsWith('.js')) {
-            res.setHeader('Content-Type', 'application/javascript');
-        }
-    },
-    fallthrough: false // Don't continue to next middleware if file not found
-}));
-
-// Handle CSS files specifically
-app.get('/styles/:filename', (req, res) => {
-    const filename = req.params.filename;
-    const filePath = path.join(__dirname, 'public', 'styles', filename);
-    
-    res.sendFile(filePath, (err) => {
-        if (err) {
-            console.error(`Error serving CSS file ${filename}:`, err);
-            res.status(404).send('CSS file not found');
-        }
-    });
-});
-
-// Models
-const User = sequelize.define('User', {
-  name: {
-    type: DataTypes.STRING,
-    allowNull: false
-  },
-  email: {
-    type: DataTypes.STRING,
-    allowNull: false,
-    unique: true
-  },
-  password: {
-    type: DataTypes.STRING,
-    allowNull: false
-  }
-});
-
-const City = sequelize.define('City', {
-  name: {
-    type: DataTypes.STRING,
-    allowNull: false
-  },
-  lat: {
-    type: DataTypes.FLOAT,
-    allowNull: false
-  },
-  lon: {
-    type: DataTypes.FLOAT,
-    allowNull: false
-  },
-  aqi: {
-    type: DataTypes.INTEGER,
-    allowNull: false
-  },
-  pm25: {
-    type: DataTypes.FLOAT,
-    allowNull: false
-  },
-  pm10: {
-    type: DataTypes.FLOAT,
-    allowNull: false
-  },
-  no2: {
-    type: DataTypes.FLOAT,
-    allowNull: false
-  },
-  so2: {
-    type: DataTypes.FLOAT,
-    allowNull: false
-  },
-  co: {
-    type: DataTypes.FLOAT,
-    allowNull: false
-  },
-  o3: {
-    type: DataTypes.FLOAT,
-    allowNull: false
-  }
-});
-
-// JWT Secret
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
-
-// Routes
+// API Routes - MUST come before static middleware
 app.get('/api/cities/count', async (req, res) => {
   try {
     const count = await City.count();
@@ -295,39 +207,144 @@ app.post('/api/auth/login', async (req, res) => {
   }
 });
 
+// Handle CSS files specifically
+app.get('/styles/:filename', (req, res) => {
+    const filename = req.params.filename;
+    const filePath = path.join(__dirname, 'public', 'styles', filename);
+    
+    res.sendFile(filePath, (err) => {
+        if (err) {
+            console.error(`Error serving CSS file ${filename}:`, err);
+            res.status(404).send('CSS file not found');
+        }
+    });
+});
+
 // Serve landing.html for root path
 app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'landing.html'));
+    res.sendFile(path.join(__dirname, 'public', 'landing.html'), (err) => {
+        if (err) {
+            console.error('Error serving landing.html:', err);
+            res.status(500).send('Landing page not found');
+        }
+    });
 });
+
+// Static file middleware - MUST come after API routes
+app.use(express.static(path.join(__dirname, 'public'), {
+    setHeaders: (res, filePath) => {
+        // Set proper MIME types
+        if (filePath.endsWith('.css')) {
+            res.setHeader('Content-Type', 'text/css');
+        } else if (filePath.endsWith('.js')) {
+            res.setHeader('Content-Type', 'application/javascript');
+        }
+    },
+    fallthrough: false // Don't continue to next middleware if file not found
+}));
 
 // Serve index.html for all other routes
 app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+    res.sendFile(path.join(__dirname, 'public', 'index.html'), (err) => {
+        if (err) {
+            console.error('Error serving index.html:', err);
+            res.status(500).send('Main page not found');
+        }
+    });
 });
 
 // Error handling middleware
 app.use((err, req, res, next) => {
-  console.error('Server error:', err);
-  res.status(500).send('Something broke!');
+    console.error('Server error:', err);
+    res.status(500).send('Something broke!');
 });
+
+// Models
+const User = sequelize.define('User', {
+  name: {
+    type: DataTypes.STRING,
+    allowNull: false
+  },
+  email: {
+    type: DataTypes.STRING,
+    allowNull: false,
+    unique: true
+  },
+  password: {
+    type: DataTypes.STRING,
+    allowNull: false
+  }
+});
+
+const City = sequelize.define('City', {
+  name: {
+    type: DataTypes.STRING,
+    allowNull: false
+  },
+  lat: {
+    type: DataTypes.FLOAT,
+    allowNull: false
+  },
+  lon: {
+    type: DataTypes.FLOAT,
+    allowNull: false
+  },
+  aqi: {
+    type: DataTypes.INTEGER,
+    allowNull: false
+  },
+  pm25: {
+    type: DataTypes.FLOAT,
+    allowNull: false
+  },
+  pm10: {
+    type: DataTypes.FLOAT,
+    allowNull: false
+  },
+  no2: {
+    type: DataTypes.FLOAT,
+    allowNull: false
+  },
+  so2: {
+    type: DataTypes.FLOAT,
+    allowNull: false
+  },
+  co: {
+    type: DataTypes.FLOAT,
+    allowNull: false
+  },
+  o3: {
+    type: DataTypes.FLOAT,
+    allowNull: false
+  }
+});
+
+// JWT Secret
+const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
 
 // Start server
 async function startServer() {
   try {
+    // Test database connection
     await sequelize.authenticate();
     console.log('✅ Database connection established successfully.');
     
+    // Sync database
     await sequelize.sync({ force: false });
     console.log('✅ Database synchronized.');
     
+    // Start server
     const PORT = process.env.PORT || 10000;
     const server = app.listen(PORT, '0.0.0.0', () => {
       console.log(`🚀 Server running on port ${PORT}`);
+      console.log(`🌐 Environment: ${process.env.NODE_ENV || 'development'}`);
     });
     
-    server.keepAliveTimeout = 120000;
-    server.headersTimeout = 120000;
+    // Set timeouts to prevent 502 errors
+    server.keepAliveTimeout = 120000; // 120 seconds
+    server.headersTimeout = 120000; // 120 seconds
     
+    // Handle graceful shutdown
     process.on('SIGTERM', () => {
       console.log('SIGTERM received, shutting down gracefully');
       server.close(() => {
@@ -339,6 +356,16 @@ async function startServer() {
       });
     });
     
+    // Handle uncaught exceptions
+    process.on('uncaughtException', (error) => {
+      console.error('Uncaught Exception:', error);
+    });
+    
+    // Handle unhandled promise rejections
+    process.on('unhandledRejection', (reason, promise) => {
+      console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+    });
+    
   } catch (error) {
     console.error('❌ Failed to start server:', error.message);
     console.log('🔄 Retrying in 5 seconds...');
@@ -346,6 +373,7 @@ async function startServer() {
   }
 }
 
+// Start the server
 startServer().catch(error => {
   console.error('Failed to start server:', error);
   process.exit(1);
