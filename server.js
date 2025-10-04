@@ -25,12 +25,12 @@ const sequelize = process.env.DATABASE_URL
       }
     })
   : new Sequelize(
-      process.env.DB_NAME,
-      process.env.DB_USER,
+      process.env.DB_NAME || 'pollutiondb',
+      process.env.DB_USER || 'pollutiondb_user',
       process.env.DB_PASSWORD,
       {
-        host: process.env.DB_HOST,
-        port: process.env.DB_PORT,
+        host: process.env.DB_HOST || 'localhost',
+        port: process.env.DB_PORT || 5432,
         dialect: 'postgres',
         logging: false,
         dialectOptions: {
@@ -47,6 +47,69 @@ const sequelize = process.env.DATABASE_URL
         }
       }
     );
+
+// Models (MOVED HERE - BEFORE ROUTES)
+const User = sequelize.define('User', {
+  name: {
+    type: DataTypes.STRING,
+    allowNull: false
+  },
+  email: {
+    type: DataTypes.STRING,
+    allowNull: false,
+    unique: true
+  },
+  password: {
+    type: DataTypes.STRING,
+    allowNull: false
+  }
+});
+
+const City = sequelize.define('City', {
+  name: {
+    type: DataTypes.STRING,
+    allowNull: false
+  },
+  lat: {
+    type: DataTypes.FLOAT,
+    allowNull: false
+  },
+  lon: {
+    type: DataTypes.FLOAT,
+    allowNull: false
+  },
+  aqi: {
+    type: DataTypes.INTEGER,
+    allowNull: false
+  },
+  pm25: {
+    type: DataTypes.FLOAT,
+    allowNull: false
+  },
+  pm10: {
+    type: DataTypes.FLOAT,
+    allowNull: false
+  },
+  no2: {
+    type: DataTypes.FLOAT,
+    allowNull: false
+  },
+  so2: {
+    type: DataTypes.FLOAT,
+    allowNull: false
+  },
+  co: {
+    type: DataTypes.FLOAT,
+    allowNull: false
+  },
+  o3: {
+    type: DataTypes.FLOAT,
+    allowNull: false
+  }
+});
+
+// JWT Secret (MOVED HERE - BEFORE ROUTES)
+const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
 
 // Middleware
 app.use(express.json());
@@ -89,7 +152,7 @@ app.get('/health', (req, res) => {
   res.status(200).json({ status: 'OK', message: 'Service is healthy' });
 });
 
-// API Routes - MUST come before static middleware
+// API Routes - NOW MODELS ARE DEFINED BEFORE THESE ROUTES
 app.get('/api/cities/count', async (req, res) => {
   try {
     const count = await City.count();
@@ -268,69 +331,6 @@ app.use((err, req, res, next) => {
     console.error('Server error:', err);
     res.status(500).send('Something broke!');
 });
-
-// Models
-const User = sequelize.define('User', {
-  name: {
-    type: DataTypes.STRING,
-    allowNull: false
-  },
-  email: {
-    type: DataTypes.STRING,
-    allowNull: false,
-    unique: true
-  },
-  password: {
-    type: DataTypes.STRING,
-    allowNull: false
-  }
-});
-
-const City = sequelize.define('City', {
-  name: {
-    type: DataTypes.STRING,
-    allowNull: false
-  },
-  lat: {
-    type: DataTypes.FLOAT,
-    allowNull: false
-  },
-  lon: {
-    type: DataTypes.FLOAT,
-    allowNull: false
-  },
-  aqi: {
-    type: DataTypes.INTEGER,
-    allowNull: false
-  },
-  pm25: {
-    type: DataTypes.FLOAT,
-    allowNull: false
-  },
-  pm10: {
-    type: DataTypes.FLOAT,
-    allowNull: false
-  },
-  no2: {
-    type: DataTypes.FLOAT,
-    allowNull: false
-  },
-  so2: {
-    type: DataTypes.FLOAT,
-    allowNull: false
-  },
-  co: {
-    type: DataTypes.FLOAT,
-    allowNull: false
-  },
-  o3: {
-    type: DataTypes.FLOAT,
-    allowNull: false
-  }
-});
-
-// JWT Secret
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
 
 // Start server
 async function startServer() {
