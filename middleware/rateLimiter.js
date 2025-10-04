@@ -6,7 +6,8 @@ const createRateLimiter = (windowMs, max, message) => {
     max,
     message,
     standardHeaders: true,
-    legacyHeaders: false
+    legacyHeaders: false,
+    trustProxy: true  // Add this line to trust proxy headers
   });
 };
 
