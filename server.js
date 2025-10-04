@@ -262,10 +262,27 @@ async function startServer() {
     console.log('✅ Database synchronized.');
     
     // Start server
-    const PORT = process.env.PORT || 3000;
-    app.listen(PORT, () => {
+    const PORT = process.env.PORT || 10000; // Use 10000 as default for Render
+    const server = app.listen(PORT, '0.0.0.0', () => {
       console.log(`🚀 Server running on port ${PORT}`);
     });
+    
+    // Set timeouts to prevent 502 errors
+    server.keepAliveTimeout = 120000; // 120 seconds
+    server.headersTimeout = 120000; // 120 seconds
+    
+    // Handle graceful shutdown
+    process.on('SIGTERM', () => {
+      console.log('SIGTERM received, shutting down gracefully');
+      server.close(() => {
+        console.log('Process terminated');
+        sequelize.close().then(() => {
+          console.log('Database connection closed');
+          process.exit(0);
+        });
+      });
+    });
+    
   } catch (error) {
     console.error('❌ Failed to start server:', error.message);
     console.log('🔄 Retrying in 5 seconds...');
