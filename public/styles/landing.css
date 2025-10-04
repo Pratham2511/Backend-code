@@ -1,10 +1,9 @@
 /* Landing Page Styles */
-.hero-section {
+.landing-bg {
     background: linear-gradient(135deg, #1a2a6c, #b21f1f, #fdbb2d);
     background-size: 400% 400%;
     animation: gradient 15s ease infinite;
-    color: white;
-    padding: 80px 0;
+    min-height: 100vh;
 }
 
 @keyframes gradient {
@@ -13,44 +12,99 @@
     100% { background-position: 0% 50%; }
 }
 
+.landing-card {
+    max-width: 500px;
+    width: 100%;
+    border-radius: 15px;
+    border: none;
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+    backdrop-filter: blur(10px);
+    background-color: rgba(255, 255, 255, 0.95);
+}
+
+/* Hero Section */
+.hero-section {
+    padding: 80px 0;
+}
+
+.brand-name {
+    font-weight: 800;
+    font-size: 2.5rem;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    background: linear-gradient(45deg, #1a2a6c, #b21f1f);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    color: transparent;
+    text-shadow: none;
+}
+
+/* Feature Cards */
 .feature-card {
     background-color: rgba(255, 255, 255, 0.1);
-    border-radius: 10px;
-    padding: 20px;
+    border-radius: 15px;
+    padding: 25px;
     height: 100%;
-    transition: transform 0.3s ease;
+    transition: all 0.3s ease;
     backdrop-filter: blur(5px);
     border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
 }
 
 .feature-card:hover {
-    transform: translateY(-5px);
+    transform: translateY(-8px);
     background-color: rgba(255, 255, 255, 0.15);
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.2);
 }
 
 .feature-icon {
-    font-size: 2.5rem;
-    margin-bottom: 15px;
+    font-size: 3rem;
+    margin-bottom: 20px;
+    display: block;
+    transition: transform 0.3s ease;
 }
 
+.feature-card:hover .feature-icon {
+    transform: scale(1.1);
+}
+
+.feature-card h5 {
+    font-size: 1.4rem;
+    font-weight: 700;
+    margin-bottom: 15px;
+    color: white;
+    text-shadow: none;
+}
+
+.feature-card p {
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 1rem;
+    line-height: 1.6;
+    text-shadow: none;
+}
+
+/* Login Section */
 .login-section {
     background-color: white;
-    border-radius: 10px;
-    padding: 25px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    border-radius: 15px;
+    padding: 30px;
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
     color: #333;
 }
 
 .login-section .nav-tabs {
-    border-bottom: 1px solid #dee2e6;
-    margin-bottom: 20px;
+    border-bottom: 2px solid #e9ecef;
+    margin-bottom: 25px;
 }
 
 .login-section .nav-tabs .nav-link {
     color: #6c757d;
     border: none;
     border-bottom: 2px solid transparent;
-    padding: 10px 20px;
+    padding: 12px 20px;
+    font-weight: 500;
+    transition: all 0.3s ease;
 }
 
 .login-section .nav-tabs .nav-link:hover {
@@ -59,70 +113,111 @@
 }
 
 .login-section .nav-tabs .nav-link.active {
-    color: #0d6efd;
+    color: #1a2a6c;
     background-color: transparent;
-    border-color: #0d6efd;
-    font-weight: 500;
+    border-color: #1a2a6c;
+    font-weight: 600;
 }
 
 .login-section .form-control {
-    border-radius: 5px;
+    border-radius: 10px;
     border: 1px solid #ced4da;
-    padding: 10px 15px;
+    padding: 12px 15px;
+    font-size: 1rem;
+    transition: all 0.3s ease;
 }
 
 .login-section .form-control:focus {
-    border-color: #86b7fe;
-    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+    border-color: #1a2a6c;
+    box-shadow: 0 0 0 0.2rem rgba(26, 42, 108, 0.25);
 }
 
 .login-section .btn {
-    border-radius: 5px;
-    padding: 10px 15px;
-    font-weight: 500;
+    border-radius: 10px;
+    padding: 12px 20px;
+    font-weight: 600;
+    transition: all 0.3s ease;
 }
 
 .login-section .btn-primary {
-    background-color: #0d6efd;
-    border-color: #0d6efd;
+    background: linear-gradient(45deg, #1a2a6c, #b21f1f);
+    border: none;
+    color: white;
 }
 
 .login-section .btn-primary:hover {
-    background-color: #0b5ed7;
-    border-color: #0a58ca;
+    background: linear-gradient(45deg, #151f4a, #961a1a);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
 }
 
 .login-section .btn-outline-secondary {
+    border: 2px solid #6c757d;
     color: #6c757d;
-    border-color: #6c757d;
 }
 
 .login-section .btn-outline-secondary:hover {
     background-color: #6c757d;
     color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
 }
 
+/* Modal */
 .modal-warning {
     color: #856404;
     background-color: #fff3cd;
-    border-radius: 5px;
-    padding: 10px 15px;
-    margin-bottom: 15px;
+    border-radius: 10px;
+    padding: 15px;
+    margin-bottom: 20px;
     border-left: 4px solid #ffc107;
 }
 
-/* Brand styling */
-.brand-name {
-    font-weight: bold;
-    font-size: 1.8rem;
-    text-transform: uppercase;
-    letter-spacing: 1px;
+.modal-warning i {
+    color: #856404;
 }
 
-/* Responsive adjustments */
+/* List Group in Modal */
+.list-group-item {
+    border: none;
+    padding: 12px 15px;
+}
+
+.list-group-item i {
+    margin-right: 10px;
+}
+
+.text-danger i {
+    color: #dc3545;
+}
+
+.text-success i {
+    color: #28a745;
+}
+
+/* Notification */
+#notification-container {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 9999;
+}
+
+.alert {
+    border-radius: 10px;
+    padding: 15px 20px;
+    margin-bottom: 10px;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+}
+
+/* Responsive Design */
 @media (max-width: 768px) {
     .hero-section {
         padding: 40px 0;
+    }
+    
+    .brand-name {
+        font-size: 2rem;
     }
     
     .feature-card {
@@ -132,4 +227,53 @@
     .login-section {
         margin-top: 30px;
     }
+    
+    .landing-card {
+        margin: 20px;
+    }
+}
+
+/* Animations */
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes slideInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.animate__animated {
+    animation-duration: 1s;
+}
+
+.animate__fadeIn {
+    animation-name: fadeIn;
+}
+
+.animate__fadeInUp {
+    animation-name: slideInUp;
+}
+
+.animate__delay-1s {
+    animation-delay: 0.3s;
+}
+
+.animate__delay-2s {
+    animation-delay: 0.6s;
+}
+
+.animate__delay-3s {
+    animation-delay: 0.9s;
+}
+
+.animate__delay-4s {
+    animation-delay: 1.2s;
 }
