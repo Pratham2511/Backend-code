@@ -207,18 +207,25 @@ app.post('/api/auth/login', async (req, res) => {
   }
 });
 
-// Handle CSS files specifically
+// Handle CSS files with enhanced logging
 app.get('/styles/:filename', (req, res) => {
     const filename = req.params.filename;
     const filePath = path.join(__dirname, 'public', 'styles', filename);
     
+    console.log(`CSS file requested: ${filename}`);
+    console.log(`Full path: ${filePath}`);
+    console.log(`File exists: ${fs.existsSync(filePath)}`);
+    
+    // Set proper headers
+    res.setHeader('Content-Type', 'text/css');
+    res.setHeader('Cache-Control', 'public, max-age=3600');
+    
     res.sendFile(filePath, (err) => {
         if (err) {
             console.error(`Error serving CSS file ${filename}:`, err);
-            res.status(404).send('CSS file not found');
-        }
-    });
-});
+            res.status(404).send(`CSS file not found: ${filename}`);
+        } else {
+            console.log(`Successfully served
 
 // Serve landing.html for root path
 app.get('/', (req, res) => {
