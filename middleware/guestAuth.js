@@ -1,3 +1,5 @@
+const { auth } = require('./auth');
+
 const guestAuth = async (req, res, next) => {
   try {
     // Check for guest header or token
