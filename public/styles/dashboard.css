@@ -1,0 +1,251 @@
+/* Dashboard/Main page specific styles */
+.main-content {
+    padding: 2rem 0;
+}
+
+/* Map styles */
+#map {
+    height: 600px;
+    border-radius: 10px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.map-controls {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    z-index: 1000;
+}
+
+/* City card styles */
+.city-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1.5rem;
+    margin-top: 2rem;
+}
+
+.city-card {
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease;
+}
+
+.city-card:hover {
+    transform: translateY(-5px);
+}
+
+.city-card .card-header {
+    background-color: transparent;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.125);
+    padding: 1rem;
+}
+
+.city-card .card-body {
+    padding: 1.5rem;
+}
+
+/* AQI Badge styles */
+.aqi-badge {
+    padding: 0.5rem 1rem;
+    border-radius: 0.5rem;
+    font-weight: bold;
+    color: white;
+}
+
+.aqi-good {
+    background-color: var(--success-color);
+}
+
+.aqi-moderate {
+    background-color: var(--warning-color);
+}
+
+.aqi-unhealthy-sensitive {
+    background-color: #fd7e14;
+}
+
+.aqi-unhealthy {
+    background-color: var(--danger-color);
+}
+
+.aqi-very-unhealthy {
+    background-color: #6f42c1;
+}
+
+.aqi-hazardous {
+    background-color: #721c24;
+}
+
+/* Chart styles */
+.chart-container {
+    position: relative;
+    height: 300px;
+    margin-top: 1rem;
+}
+
+.mini-chart {
+    height: 150px;
+    margin-top: 1rem;
+}
+
+/* Loading spinner */
+.loading-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+/* Filter and search section */
+.filters-section {
+    margin-bottom: 2rem;
+    padding: 1rem;
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.search-box {
+    max-width: 400px;
+}
+
+/* Comparison view */
+.comparison-section {
+    margin-top: 2rem;
+    padding: 2rem;
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.comparison-chart {
+    height: 400px;
+    margin-top: 2rem;
+}
+
+/* Statistics section */
+.stats-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.stat-card {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 10px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    text-align: center;
+}
+
+.stat-card .stat-value {
+    font-size: 2rem;
+    font-weight: bold;
+    color: var(--primary-color);
+}
+
+/* Dark mode adjustments */
+.dark-mode .city-card,
+.dark-mode .filters-section,
+.dark-mode .comparison-section,
+.dark-mode .stat-card {
+    background-color: #1e1e1e;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+}
+
+.dark-mode .loading-overlay {
+    background: rgba(30, 30, 30, 0.8);
+}
+
+.dark-mode .chart-container {
+    background-color: #1e1e1e;
+}
+
+.dark-mode #map {
+    filter: grayscale(0.7) brightness(0.8);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    #map {
+        height: 400px;
+    }
+
+    .city-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .stats-cards {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .comparison-chart {
+        height: 300px;
+    }
+}
+
+@media (max-width: 576px) {
+    .stats-cards {
+        grid-template-columns: 1fr;
+    }
+
+    .filters-section {
+        flex-direction: column;
+    }
+
+    .search-box {
+        max-width: 100%;
+        margin-bottom: 1rem;
+    }
+}
+
+/* Animation classes */
+.fade-enter {
+    opacity: 0;
+    transform: translateY(20px);
+}
+
+.fade-enter-active {
+    opacity: 1;
+    transform: translateY(0);
+    transition: opacity 300ms ease-in, transform 300ms ease-out;
+}
+
+.fade-exit {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.fade-exit-active {
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 300ms ease-in, transform 300ms ease-out;
+}
+
+/* Accessibility improvements */
+.visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+/* Focus styles */
+:focus {
+    outline: 3px solid var(--primary-color);
+    outline-offset: 2px;
+}

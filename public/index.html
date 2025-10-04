@@ -18,350 +18,8 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
     
     <!-- Custom CSS -->
-    <style>
-        :root {
-            --primary-color: #0d6efd;
-            --secondary-color: #6c757d;
-            --success-color: #198754;
-            --info-color: #0dcaf0;
-            --warning-color: #ffc107;
-            --danger-color: #dc3545;
-            --light-color: #f8f9fa;
-            --dark-color: #212529;
-        }
-
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #f8f9fa;
-            color: #333;
-        }
-
-        .navbar-brand .brand-name {
-            font-weight: 700;
-            font-size: 1.5rem;
-            letter-spacing: -0.5px;
-        }
-
-        .hero-section {
-            background: linear-gradient(135deg, #0d6efd 0%, #6610f2 100%);
-            color: white;
-            padding: 5rem 0;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .hero-section::before {
-            content: "";
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiPjxkZWZzPjxwYXR0ZXJuIGlkPSJwYXR0ZXJuIiB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHBhdHRlcm5Vbml0cz0idXNlclNwYWNlT25Vc2UiIHBhdHRlcm5UcmFuc2Zvcm09InJvdGF0ZSg0NSkiPjxyZWN0IHg9IjAiIHk9IjAiIHdpZHRoPSIyMCIgaGVpZ2h0PSIyMCIgZmlsbD0icmdiYSgyNTUsIDI1NSwgMjU1LCAwLjA1KSIvPjwvcGF0dGVybj48L2RlZnM+PHJlY3Qgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgZmlsbD0idXJsKCNwYXR0ZXJuKSIvPjwvc3ZnPg==');
-            opacity: 0.2;
-        }
-
-        .hero-section > .container {
-            position: relative;
-            z-index: 1;
-        }
-
-        .stat-box {
-            background-color: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(5px);
-            border-radius: 10px;
-            padding: 1.5rem;
-            transition: transform 0.3s;
-        }
-
-        .stat-box:hover {
-            transform: translateY(-5px);
-        }
-
-        .stat-box i {
-            font-size: 2rem;
-            margin-bottom: 0.5rem;
-        }
-
-        .stat-box h3 {
-            font-size: 2rem;
-            font-weight: 700;
-            margin-bottom: 0;
-        }
-
-        .action-card {
-            cursor: pointer;
-            transition: all 0.3s ease;
-            border: none;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-        }
-
-        .action-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-        }
-
-        .action-icon {
-            width: 60px;
-            height: 60px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .city-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 1.5rem;
-        }
-
-        .city-card {
-            transition: all 0.3s ease;
-        }
-
-        .city-card:hover {
-            transform: translateY(-5px);
-        }
-
-        .aqi-badge {
-            font-size: 1.5rem;
-            font-weight: 700;
-            padding: 0.5rem;
-            border-radius: 50%;
-            width: 80px;
-            height: 80px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .aqi-good {
-            background-color: #198754;
-        }
-
-        .aqi-moderate {
-            background-color: #ffc107;
-        }
-
-        .aqi-unhealthy-sensitive {
-            background-color: #fd7e14;
-        }
-
-        .aqi-unhealthy {
-            background-color: #dc3545;
-        }
-
-        .aqi-very-unhealthy {
-            background-color: #6f42c1;
-        }
-
-        .aqi-hazardous {
-            background-color: #721c24;
-        }
-
-        #map {
-            min-height: 500px;
-            width: 100%;
-            position: relative;
-            z-index: 1;
-            border-radius: 10px;
-            overflow: hidden;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-        }
-
-        .map-controls {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            z-index: 1000;
-            width: 300px;
-        }
-
-        .loading-spinner {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            z-index: 1000;
-            display: none; /* Hide by default */
-        }
-
-        .chart-container {
-            position: relative;
-            height: 300px;
-            width: 100%;
-        }
-
-        .mini-chart-container {
-            position: relative;
-            height: 200px;
-            width: 100%;
-        }
-
-        .health-card {
-            border-radius: 10px;
-            padding: 1.5rem;
-            margin-bottom: 1rem;
-        }
-
-        .health-good {
-            background-color: rgba(25, 135, 84, 0.1);
-            border-left: 4px solid #198754;
-        }
-
-        .health-moderate {
-            background-color: rgba(255, 193, 7, 0.1);
-            border-left: 4px solid #ffc107;
-        }
-
-        .health-unhealthy-sensitive {
-            background-color: rgba(253, 126, 20, 0.1);
-            border-left: 4px solid #fd7e14;
-        }
-
-        .health-unhealthy {
-            background-color: rgba(220, 53, 69, 0.1);
-            border-left: 4px solid #dc3545;
-        }
-
-        .health-very-unhealthy {
-            background-color: rgba(111, 66, 193, 0.1);
-            border-left: 4px solid #6f42c1;
-        }
-
-        .health-hazardous {
-            background-color: rgba(114, 28, 36, 0.1);
-            border-left: 4px solid #721c24;
-        }
-
-        .highlight-box {
-            border-radius: 10px;
-            padding: 1.5rem;
-            margin-bottom: 1rem;
-            color: white;
-        }
-
-        .most-polluted {
-            background: linear-gradient(135deg, #dc3545 0%, #721c24 100%);
-        }
-
-        .least-polluted {
-            background: linear-gradient(135deg, #198754 0%, #0f5132 100%);
-        }
-
-        .weather-card {
-            display: flex;
-            align-items: center;
-            margin-bottom: 1rem;
-        }
-
-        .weather-icon {
-            font-size: 2rem;
-            margin-right: 1rem;
-        }
-
-        .timeline-slider {
-            margin: 2rem 0;
-        }
-
-        .alert-card {
-            border-radius: 10px;
-            padding: 1rem;
-            margin-bottom: 1rem;
-        }
-
-        .alert-warning {
-            background-color: rgba(255, 193, 7, 0.1);
-            border-left: 4px solid #ffc107;
-        }
-
-        .refresh-indicator {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            z-index: 1050;
-            display: none;
-        }
-
-        .last-updated {
-            text-align: center;
-            color: #6c757d;
-            font-size: 0.9rem;
-            margin-top: 1rem;
-        }
-
-        .dark-mode {
-            background-color: #121212;
-            color: #e0e0e0;
-        }
-
-        .dark-mode .card {
-            background-color: #1e1e1e;
-            border-color: #333;
-        }
-
-        .dark-mode .navbar {
-            background-color: #1e1e1e !important;
-        }
-
-        .dark-mode .hero-section {
-            background: linear-gradient(135deg, #1a237e 0%, #4a148c 100%);
-        }
-
-        .dark-mode .action-card {
-            background-color: #2a2a2a;
-        }
-
-        .dark-mode .nav-tabs .nav-link {
-            color: #e0e0e0;
-        }
-
-        .dark-mode .nav-tabs .nav-link.active {
-            background-color: #2a2a2a;
-            border-color: #333 #333 #2a2a2a;
-        }
-
-        .dark-mode .accordion-button:not(.collapsed) {
-            background-color: #2a2a2a;
-            color: #e0e0e0;
-        }
-
-        .dark-mode .accordion-body {
-            background-color: #2a2a2a;
-        }
-
-        /* Map fixes */
-        .tab-pane {
-            position: relative;
-        }
-
-        .tab-pane:not(.active) {
-            display: block !important;
-            height: 0;
-            overflow: hidden;
-            visibility: hidden;
-        }
-
-        .tab-pane.active {
-            height: auto;
-            overflow: visible;
-            visibility: visible;
-        }
-
-        @media (max-width: 768px) {
-            .hero-section {
-                padding: 3rem 0;
-            }
-            
-            .stat-box {
-                margin-bottom: 1rem;
-            }
-            
-            .map-controls {
-                width: 250px;
-            }
-        }
-    </style>
+    <link rel="stylesheet" href="styles/common.css">
+    <link rel="stylesheet" href="styles/main.css">
 </head>
 <body>
     <!-- Skip to content link for accessibility -->
@@ -387,15 +45,8 @@
                             <i class="bi bi-info-circle me-1"></i> About
                         </a>
                     </li>
-                    <li class="nav-item">
-                        <button class="btn btn-outline-light ms-2" data-bs-toggle="modal" data-bs-target="#loginModal">
-                            <i class="bi bi-person-circle me-1"></i> Login
-                        </button>
-                    </li>
-                    <li class="nav-item">
-                        <button class="btn btn-primary ms-2" data-bs-toggle="modal" data-bs-target="#registerModal">
-                            <i class="bi bi-person-plus me-1"></i> Register
-                        </button>
+                    <li class="nav-item" id="userProfileSection">
+                        <!-- Will be populated by JavaScript -->
                     </li>
                     <li class="nav-item">
                         <button id="darkModeToggle" class="btn btn-outline-light ms-2" aria-label="Toggle dark mode">
@@ -1166,9 +817,27 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
     <!-- Custom JavaScript -->
+    <script type="module">
+        import { indianCitiesData as cities } from './data/cities.js';
+        window.cities = cities;
+    </script>
+    <script src="scripts/pollutionTracker.js"></script>
+    <script src="scripts/map.js"></script>
     <script>
         // API Configuration
         const API_BASE = ''; // Empty for same origin, or set to your deployed URL
+        
+        // Check authentication on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            const userType = localStorage.getItem('userType');
+            if (!userType) {
+                window.location.href = 'landing.html';
+                return;
+            }
+            
+            updateUserProfile(userType);
+            setupFeatureRestrictions(userType);
+        });
 
         // Retry function for API calls
         async function fetchWithRetry(url, options = {}, retries = 3, delay = 1000) {
@@ -1272,42 +941,75 @@
             }
         }
 
-        // Update auth UI
-        function updateAuthUI() {
-            const user = JSON.parse(localStorage.getItem('user'));
-            const loginBtn = document.querySelector('button[data-bs-target="#loginModal"]');
-            const registerBtn = document.querySelector('button[data-bs-target="#registerModal"]');
+        // Update user profile UI
+        function updateUserProfile(userType) {
+            const userProfileSection = document.getElementById('userProfileSection');
+            const userName = userType === 'guest' ? 'Guest User' : (localStorage.getItem('userName') || 'User');
             
-            if (user) {
-                if (loginBtn) loginBtn.style.display = 'none';
-                if (registerBtn) registerBtn.style.display = 'none';
-                
-                // Add user info to navbar
-                const navbar = document.querySelector('.navbar-nav');
-                const existingUserItem = document.querySelector('#userDropdown');
-                
-                if (!existingUserItem) {
-                    const userItem = document.createElement('li');
-                    userItem.id = 'userDropdown';
-                    userItem.className = 'nav-item dropdown';
-                    userItem.innerHTML = `
-                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                            <i class="bi bi-person-circle me-1"></i> ${user.name}
-                        </a>
-                        <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
-                            <li><a class="dropdown-item" href="#" onclick="logout()">Logout</a></li>
-                        </ul>
+            userProfileSection.innerHTML = `
+                <div class="dropdown">
+                    <button class="btn btn-outline-light dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                        <i class="bi bi-person-circle me-1"></i> ${userName}
+                        ${userType === 'guest' ? '<span class="badge bg-warning ms-1">Guest</span>' : ''}
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        ${userType === 'guest' ? `
+                            <li><a class="dropdown-item text-primary" href="landing.html">
+                                <i class="bi bi-person-plus me-1"></i> Register Account
+                            </a></li>
+                        ` : ''}
+                        <li><a class="dropdown-item text-danger" href="#" onclick="logout()">
+                            <i class="bi bi-box-arrow-right me-1"></i> Logout
+                        </a></li>
+                    </ul>
+                </div>
+            `;
+        }
+        
+        // Set up feature restrictions for guest users
+        function setupFeatureRestrictions(userType) {
+            if (userType === 'guest') {
+                // Disable map location adding
+                const mapControls = document.querySelector('.map-controls');
+                if (mapControls) {
+                    mapControls.innerHTML = `
+                        <div class="card">
+                            <div class="card-body">
+                                <h6 class="card-title">Map Features Limited</h6>
+                                <p class="small text-muted mb-0">Please <a href="landing.html">register</a> to add custom locations</p>
+                            </div>
+                        </div>
                     `;
-                    navbar.appendChild(userItem);
+                }
+                
+                // Disable analysis features
+                const analysisTab = document.getElementById('analysis-tab');
+                if (analysisTab) {
+                    analysisTab.classList.add('disabled');
+                    analysisTab.setAttribute('title', 'Register to access detailed analysis');
+                }
+                
+                // Add warning banner
+                const mainTabsContent = document.getElementById('mainTabsContent');
+                if (mainTabsContent) {
+                    const warningBanner = document.createElement('div');
+                    warningBanner.className = 'alert alert-warning alert-dismissible fade show mb-3';
+                    warningBanner.innerHTML = `
+                        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                        You are using a guest account with limited features. 
+                        <a href="landing.html" class="alert-link">Register now</a> to access all features.
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    `;
+                    mainTabsContent.prepend(warningBanner);
                 }
             }
         }
 
         // Logout function
         function logout() {
-            localStorage.removeItem('token');
-            localStorage.removeItem('user');
-            window.location.reload();
+            localStorage.removeItem('userType');
+            localStorage.removeItem('userName');
+            window.location.href = 'landing.html';
         }
 
         // Map functionality
@@ -1330,21 +1032,57 @@
                 attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
             }).addTo(map);
 
-            // Add click event to add city markers
-            map.on('click', function(e) {
-                addCityMarker(e.latlng.lat, e.latlng.lng);
+            // Add markers for all cities
+            window.cities.forEach(city => {
+                const aqiColor = getAQIColor(city.aqi);
+                const marker = L.circleMarker([city.lat, city.lon], {
+                    radius: 8,
+                    fillColor: aqiColor,
+                    color: '#fff',
+                    weight: 1,
+                    opacity: 1,
+                    fillOpacity: 0.8
+                }).addTo(map);
+
+                // Create popup content
+                const popupContent = `
+                    <div class="map-popup">
+                        <h6>${city.name}</h6>
+                        <p class="mb-1">AQI: <strong style="color: ${aqiColor}">${city.aqi}</strong></p>
+                        <button class="btn btn-sm btn-primary" onclick="addCityFromMap('${city.name}')">
+                            Add to Tracker
+                        </button>
+                    </div>
+                `;
+
+                // Add popup to marker
+                marker.bindPopup(popupContent);
+                markers.push(marker);
             });
 
             // Hide loading spinner
             document.getElementById('mapLoading').style.display = 'none';
         }
 
-        function addCityMarker(lat, lng) {
-            const marker = L.marker([lat, lng]).addTo(map);
-            markers.push(marker);
-            
-            // Add a popup to the marker
-            marker.bindPopup(`Lat: ${lat.toFixed(4)}, Lng: ${lng.toFixed(4)}`).openPopup();
+        function getAQIColor(aqi) {
+            if (aqi <= 50) return '#198754';  // Good - Green
+            if (aqi <= 100) return '#ffc107'; // Moderate - Yellow
+            if (aqi <= 150) return '#fd7e14'; // Unhealthy for Sensitive Groups - Orange
+            if (aqi <= 200) return '#dc3545'; // Unhealthy - Red
+            if (aqi <= 300) return '#6f42c1'; // Very Unhealthy - Purple
+            return '#721c24';                 // Hazardous - Maroon
+        }
+
+        function addCityFromMap(cityName) {
+            const city = window.cities.find(c => c.name === cityName);
+            if (city && !trackedCities.some(tc => tc.name === cityName)) {
+                trackedCities.push(city);
+                addCityCard(city);
+                showNotification(`Added ${cityName} to tracker!`, 'success');
+                updateLastUpdatedTime();
+            } else if (trackedCities.some(tc => tc.name === cityName)) {
+                showNotification(`${cityName} is already being tracked!`, 'warning');
+            }
         }
 
         function searchMapLocation() {
@@ -1377,20 +1115,11 @@
         // Pollution tracker functionality
         let trackedCities = [];
 
+        let trackedCities = [];
+
         function addRandomCity() {
-            const cities = [
-                { name: 'Delhi', aqi: Math.floor(Math.random() * 300) + 50, pm25: Math.floor(Math.random() * 100) + 20, pm10: Math.floor(Math.random() * 150) + 30 },
-                { name: 'Mumbai', aqi: Math.floor(Math.random() * 250) + 40, pm25: Math.floor(Math.random() * 80) + 15, pm10: Math.floor(Math.random() * 120) + 25 },
-                { name: 'Bangalore', aqi: Math.floor(Math.random() * 200) + 30, pm25: Math.floor(Math.random() * 60) + 10, pm10: Math.floor(Math.random() * 100) + 20 },
-                { name: 'Kolkata', aqi: Math.floor(Math.random() * 280) + 45, pm25: Math.floor(Math.random() * 90) + 18, pm10: Math.floor(Math.random() * 130) + 28 },
-                { name: 'Chennai', aqi: Math.floor(Math.random() * 220) + 35, pm25: Math.floor(Math.random() * 70) + 12, pm10: Math.floor(Math.random() * 110) + 22 },
-                { name: 'Hyderabad', aqi: Math.floor(Math.random() * 240) + 38, pm25: Math.floor(Math.random() * 75) + 14, pm10: Math.floor(Math.random() * 115) + 24 },
-                { name: 'Pune', aqi: Math.floor(Math.random() * 210) + 32, pm25: Math.floor(Math.random() * 65) + 11, pm10: Math.floor(Math.random() * 105) + 21 },
-                { name: 'Ahmedabad', aqi: Math.floor(Math.random() * 260) + 42, pm25: Math.floor(Math.random() * 85) + 16, pm10: Math.floor(Math.random() * 125) + 26 }
-            ];
-            
             // Filter out cities that are already being tracked
-            const availableCities = cities.filter(city => 
+            const availableCities = window.cities.filter(city => 
                 !trackedCities.some(tracked => tracked.name === city.name)
             );
             
@@ -1444,12 +1173,15 @@
                     <p class="card-text"><strong>Status:</strong> ${aqiStatus}</p>
                     <p class="card-text"><strong>PM2.5:</strong> ${city.pm25} µg/m³</p>
                     <p class="card-text"><strong>PM10:</strong> ${city.pm10} µg/m³</p>
-                    <div class="d-flex justify-content-between mt-3">
-                        <button class="btn btn-sm btn-outline-primary" onclick="refreshCityData('${city.name}')">
+                    <div class="d-flex gap-2 mt-3">
+                        <button class="btn btn-sm btn-outline-primary flex-grow-1" onclick="refreshCityData('${city.name}')">
                             <i class="bi bi-arrow-clockwise me-1"></i> Refresh
                         </button>
+                        <button class="btn btn-sm btn-primary flex-grow-1" onclick="viewCityAnalysis('${city.name}')">
+                            <i class="bi bi-graph-up me-1"></i> Analysis
+                        </button>
                         <button class="btn btn-sm btn-outline-danger" onclick="removeCity('${city.name}')">
-                            <i class="bi bi-trash me-1"></i> Remove
+                            <i class="bi bi-trash me-1"></i>
                         </button>
                     </div>
                 </div>
@@ -1556,8 +1288,105 @@
             }
         }
 
+        function viewCityAnalysis(cityName) {
+            const city = window.cities.find(c => c.name === cityName);
+            if (!city) return;
+
+            // Switch to analysis tab
+            document.getElementById('analysis-tab').click();
+            
+            // Update city name in analysis view
+            document.getElementById('analysisCityName').textContent = `${cityName} Analysis`;
+            
+            // Show single city analysis view, hide all cities view
+            document.getElementById('singleCityPollutants').style.display = 'block';
+            document.getElementById('allCitiesPollutants').style.display = 'none';
+            
+            // Update health impact card
+            updateHealthImpact(city.aqi);
+            
+            // Update weather data
+            document.getElementById('temperature').textContent = `${Math.round(20 + Math.random() * 15)}°C`;
+            document.getElementById('humidity').textContent = `${Math.round(40 + Math.random() * 40)}%`;
+            document.getElementById('windSpeed').textContent = `${Math.round(5 + Math.random() * 20)} km/h`;
+            
+            // Update pollutant chart
+            const ctx = document.getElementById('cityPollutantChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['PM2.5', 'PM10', 'NO2', 'SO2', 'CO', 'O3'],
+                    datasets: [{
+                        label: 'Concentration',
+                        data: [city.pm25, city.pm10, city.no2, city.so2, city.co, city.o3],
+                        backgroundColor: [
+                            'rgba(255, 99, 132, 0.5)',
+                            'rgba(54, 162, 235, 0.5)',
+                            'rgba(255, 206, 86, 0.5)',
+                            'rgba(75, 192, 192, 0.5)',
+                            'rgba(153, 102, 255, 0.5)',
+                            'rgba(255, 159, 64, 0.5)'
+                        ],
+                        borderColor: [
+                            'rgba(255, 99, 132, 1)',
+                            'rgba(54, 162, 235, 1)',
+                            'rgba(255, 206, 86, 1)',
+                            'rgba(75, 192, 192, 1)',
+                            'rgba(153, 102, 255, 1)',
+                            'rgba(255, 159, 64, 1)'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+            
+            showNotification(`Showing analysis for ${cityName}`, 'info');
+        }
+
+        function updateHealthImpact(aqi) {
+            const healthCard = document.getElementById('healthImpactCard');
+            const healthTitle = document.getElementById('healthTitle');
+            const healthDescription = document.getElementById('healthDescription');
+            
+            if (aqi <= 50) {
+                healthCard.className = 'health-card health-good';
+                healthTitle.textContent = 'Air quality is Good';
+                healthDescription.textContent = 'Air quality is satisfactory, and air pollution poses little or no risk.';
+            } else if (aqi <= 100) {
+                healthCard.className = 'health-card health-moderate';
+                healthTitle.textContent = 'Air quality is Moderate';
+                healthDescription.textContent = 'Air quality is acceptable. However, there may be a risk for some people, particularly those who are unusually sensitive to air pollution.';
+            } else if (aqi <= 150) {
+                healthCard.className = 'health-card health-unhealthy-sensitive';
+                healthTitle.textContent = 'Unhealthy for Sensitive Groups';
+                healthDescription.textContent = 'Members of sensitive groups may experience health effects. The general public is less likely to be affected.';
+            } else if (aqi <= 200) {
+                healthCard.className = 'health-card health-unhealthy';
+                healthTitle.textContent = 'Air quality is Unhealthy';
+                healthDescription.textContent = 'Some members of the general public may experience health effects; members of sensitive groups may experience more serious health effects.';
+            } else if (aqi <= 300) {
+                healthCard.className = 'health-card health-very-unhealthy';
+                healthTitle.textContent = 'Air quality is Very Unhealthy';
+                healthDescription.textContent = 'Health alert: The risk of health effects is increased for everyone.';
+            } else {
+                healthCard.className = 'health-card health-hazardous';
+                healthTitle.textContent = 'Air quality is Hazardous';
+                healthDescription.textContent = 'Health warning of emergency conditions: everyone is more likely to be affected.';
+            }
+        }
+
         function showAllCitiesAnalysis() {
-            document.getElementById('analysisCityName').textContent = 'City Analysis';
+            document.getElementById('analysisCityName').textContent = 'All Cities Analysis';
+            document.getElementById('singleCityPollutants').style.display = 'none';
+            document.getElementById('allCitiesPollutants').style.display = 'block';
             showNotification('Showing all cities analysis', 'info');
         }
 

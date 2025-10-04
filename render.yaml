@@ -9,4 +9,23 @@ services:
         value: production
       - key: PORT
         value: 10000
+      - key: DB_HOST
+        sync: false
+      - key: DB_USER
+        sync: false
+      - key: DB_PASSWORD
+        sync: false
+      - key: DB_NAME
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_EXPIRY
+        value: "24h"
+      - key: RATE_LIMIT_WINDOW_MS
+        value: "900000"
+      - key: RATE_LIMIT_MAX
+        value: "100"
+      - key: ALLOWED_ORIGINS
+        value: "https://air-pollution-tracker.onrender.com"
     healthCheckPath: /health
+    autoDeploy: true

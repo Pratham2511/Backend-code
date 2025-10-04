@@ -1,0 +1,75 @@
+/* Common styles shared between landing and main pages */
+:root {
+    --primary-color: #0d6efd;
+    --secondary-color: #6c757d;
+    --success-color: #198754;
+    --info-color: #0dcaf0;
+    --warning-color: #ffc107;
+    --danger-color: #dc3545;
+    --light-color: #f8f9fa;
+    --dark-color: #212529;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    color: #333;
+}
+
+.navbar {
+    background: rgba(33, 37, 41, 0.9) !important;
+}
+
+.brand-name {
+    font-weight: 700;
+    font-size: 1.5rem;
+    letter-spacing: -0.5px;
+}
+
+/* Notification styles */
+#notification-container {
+    position: fixed;
+    top: 0;
+    right: 0;
+    padding: 1rem;
+    z-index: 9999;
+}
+
+/* Dark mode styles */
+.dark-mode {
+    background-color: #121212;
+    color: #e0e0e0;
+}
+
+.dark-mode .card {
+    background-color: #1e1e1e;
+    border-color: #333;
+}
+
+.dark-mode .navbar {
+    background-color: #1e1e1e !important;
+}
+
+.dark-mode .nav-tabs .nav-link {
+    color: #e0e0e0;
+}
+
+.dark-mode .nav-tabs .nav-link.active {
+    background-color: #2a2a2a;
+    border-color: #333 #333 #2a2a2a;
+}
+
+.dark-mode .accordion-button:not(.collapsed) {
+    background-color: #2a2a2a;
+    color: #e0e0e0;
+}
+
+.dark-mode .accordion-body {
+    background-color: #2a2a2a;
+}
+
+/* Media Queries */
+@media (max-width: 768px) {
+    .hero-section {
+        padding: 3rem 0;
+    }
+}
