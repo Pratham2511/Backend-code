@@ -1,9 +1,10 @@
 const { Sequelize } = require('sequelize');
 const express = require('express');
-const path = require('path'); // Add this
+const path = require('path');
+const fs = require('fs'); // Add this for file system operations
 const app = express();
 
-// Database configuration (keep as is)
+// Database configuration
 const sequelize = process.env.DATABASE_URL
   ? new Sequelize(process.env.DATABASE_URL, {
       dialect: 'postgres',
@@ -48,6 +49,27 @@ const sequelize = process.env.DATABASE_URL
 // Middleware to parse JSON bodies
 app.use(express.json());
 
+// Debug route to check file structure
+app.get('/debug', (req, res) => {
+  const publicPath = path.join(__dirname, 'public');
+  const indexPath = path.join(publicPath, 'index.html');
+  
+  try {
+    const files = fs.readdirSync(publicPath, { recursive: true });
+    res.json({
+      publicPath: publicPath,
+      indexPath: indexPath,
+      indexExists: fs.existsSync(indexPath),
+      files: files
+    });
+  } catch (error) {
+    res.status(500).json({
+      error: error.message,
+      publicPath: publicPath
+    });
+  }
+});
+
 // Serve static files from the public directory
 app.use(express.static(path.join(__dirname, 'public')));
 
@@ -70,9 +92,16 @@ app.post('/api/auth/register', (req, res) => {
   res.json({ token: 'dummy-token', user: { name: 'New User' } });
 });
 
-// For any other route, serve the React app
+// For any other route, serve the index.html
 app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+  const indexPath = path.join(__dirname, 'public', 'index.html');
+  
+  // Check if index.html exists
+  if (fs.existsSync(indexPath)) {
+    res.sendFile(indexPath);
+  } else {
+    res.status(404).send('index.html not found');
+  }
 });
 
 // Error handling middleware
@@ -90,10 +119,23 @@ async function startServer() {
     console.log('✅ Database synchronized.');
     
     const PORT = process.env.PORT || 3000;
-    app.listen(PORT, () => {
+    const server = app.listen(PORT, () => {
       console.log(`🚀 Server running on port ${PORT}`);
+      console.log(`📁 Serving static files from: ${path.join(__dirname, 'public')}`);
     });
-    
+
+    // Graceful shutdown
+    process.on('SIGTERM', () => {
+      console.log('SIGTERM received, shutting down gracefully');
+      server.close(() => {
+        console.log('Process terminated');
+        sequelize.close().then(() => {
+          console.log('Database connection closed');
+          process.exit(0);
+        });
+      });
+    });
+
   } catch (error) {
     console.error('❌ Failed to start server:', error.message);
     console.log('🔄 Retrying in 5 seconds...');
