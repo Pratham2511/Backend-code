@@ -1,34 +1,28 @@
-const path = require('path');
+const { Sequelize } = require('sequelize');
 
-module.exports = {
-  development: {
-    username: process.env.DB_USER || 'postgres',
-    password: process.env.DB_PASSWORD || 'password',
-    database: process.env.DB_NAME || 'air_pollution_tracker',
-    host: process.env.DB_HOST || 'localhost',
-    dialect: 'postgres',
-    logging: false
-  },
-  test: {
-    username: process.env.DB_USER || 'postgres',
-    password: process.env.DB_PASSWORD || 'password',
-    database: process.env.DB_NAME || 'air_pollution_tracker_test',
-    host: process.env.DB_HOST || 'localhost',
-    dialect: 'postgres',
-    logging: false
-  },
-  production: {
-    username: process.env.DB_USER,
-    password: process.env.DB_PASSWORD,
-    database: process.env.DB_NAME,
-    host: process.env.DB_HOST,
-    dialect: 'postgres',
-    logging: false,
-    dialectOptions: {
-      ssl: {
-        require: true,
-        rejectUnauthorized: false
+const sequelize = process.env.DATABASE_URL
+  ? new Sequelize(process.env.DATABASE_URL, {
+      dialect: 'postgres',
+      logging: process.env.NODE_ENV === 'development' ? console.log : false,
+      dialectOptions: {
+        ssl: { require: true, rejectUnauthorized: false }
+      },
+      pool: { max: 5, min: 0, acquire: 30000, idle: 10000 }
+    })
+  : new Sequelize(
+      process.env.DB_NAME,
+      process.env.DB_USER,
+      process.env.DB_PASSWORD,
+      {
+        host: process.env.DB_HOST,
+        port: process.env.DB_PORT,
+        dialect: 'postgres',
+        logging: process.env.NODE_ENV === 'development' ? console.log : false,
+        dialectOptions: {
+          ssl: { require: true, rejectUnauthorized: false }
+        },
+        pool: { max: 5, min: 0, acquire: 30000, idle: 10000 }
       }
-    }
-  }
-};
+    );
+
+module.exports = sequelize;
