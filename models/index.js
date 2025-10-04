@@ -2,7 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const Sequelize = require('sequelize');
 
-// Use environment variables for database connection
+// Use environment variables for database connection with connection pooling
 const sequelize = new Sequelize(
   process.env.DB_NAME,
   process.env.DB_USER,
@@ -16,6 +16,22 @@ const sequelize = new Sequelize(
         require: true,
         rejectUnauthorized: false
       }
+    },
+    pool: {
+      max: 10,
+      min: 0,
+      acquire: 30000,
+      idle: 10000
+    },
+    retry: {
+      match: [
+        /SequelizeConnectionError/,
+        /SequelizeConnectionRefusedError/,
+        /SequelizeHostNotFoundError/,
+        /SequelizeHostNotReachableError/,
+        /SequelizeInvalidConnectionError/
+      ],
+      max: 3
     }
   }
 );
